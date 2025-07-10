@@ -1,4 +1,4 @@
-2dffe8aaec1c7083747e82ab1aaee846 *DESCRIPTION
+1ca20f7abec83b491c3518ac189f1847 *DESCRIPTION
 8f6fcb7970295f7e21682751cb0eb87c *LICENSE
 18320224b1a13388e15c6447a127dbf5 *NAMESPACE
 8a9dfef4f828e002258958dac41469b7 *NEWS.md
@@ -38,13 +38,13 @@ c793bcf622dda6a6ca5fa018acf4f589 *R/sdm_as.R
 bd30e2975dfd420dbc0afd356db7667e *R/sf_to_df_sdm.R
 60ffa7bf57936d388658bb1699900c70 *R/summary_sdm.R
 cd767f699277cd7fd1d68ff7b2c9098e *R/tidyverse.R
-ff0e0482a94e218c973f056ed752af60 *R/train_sdm.R
+f1e4297826911af7b75c7fee59c65c2b *R/train_sdm.R
 c0d425b30ecd220f3a4a27210555b0ba *R/tsne_sdm.R
 d61e6bd40f312623f96e4b0290ac315f *R/use_mem.R
 8cf441f4fe44163d770b85fb6d4edcf0 *R/varImp_sdm.R
 dd65e7df6656a916ec624cdffa5c95eb *R/vif_predictors.R
 e02d3363dce3d696fb15378683f80138 *R/write.R
-1ce985488d26c2ec48678601f01f74b6 *README.md
+aab986eec848587cb10418a55960a285 *README.md
 2666aeff4bee87da520fb27f0706e153 *data/algorithms.rda
 5141e2996bd3f19fc5b9518cb03dd029 *data/bioc.rda
 d223676b0bfa1e3b922289bdda79d5dd *data/occ.rda
@@ -116,7 +116,7 @@ ccebb766660bdf951f95af1737eb4b92 *tests/testthat/test-plot.R
 8ad4e390427a57e676e3046ec96ce7d7 *tests/testthat/test-predict_sdm.R
 9c24acf13c1831391a13250907705f8f *tests/testthat/test-predictors_misc.R
 93d43617e2e4df6c526f6b9b8768cd88 *tests/testthat/test-pseudoabsences.R
-f42433f8d9fbf25487e75301dfe90435 *tests/testthat/test-sdm_area.R
+e7df2982c59cc76fbfdec1b3d3b542c2 *tests/testthat/test-sdm_area.R
 167ef241260d5e107367ef59d70b8a57 *tests/testthat/test-sdm_as.R
 ff492f1c04a0e79c2195ad15c94c50a8 *tests/testthat/test-sf_to_df_sdm.R
 2e7801a5fa6187ceff77c2467e063109 *tests/testthat/test-tidyverse.R

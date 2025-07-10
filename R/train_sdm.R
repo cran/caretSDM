@@ -98,7 +98,8 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
     z <- occ$occurrences
     pred <- occ$predictors
   }
-  assert_character_cli(algo)
+  assert_subset_cli(class(algo), c("list", "character"), empty.ok = FALSE)
+
   if(!is.null(ctrl)){
     assert_list_cli(ctrl, len=27)
     assert_names_cli(names(ctrl),
@@ -130,6 +131,11 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
     )
   }
   algo2 <- algo
+  custom_algo <- c("label", "library", "loop", "type", "levels", "parameters", "grid", "fit",
+                   "predict", "prob", "predictors", "varImp", "tags")
+  if(is.list(algo) && all(names(algo) %in% custom_algo)) {
+    algo2 <- deparse(substitute(algo))
+  }
 
   l <- list()
   if ("independent_test" %in% names(z)) {
@@ -207,15 +213,26 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
       #  l[[paste0("m", i, ".")]] <- m
       #  next
       #}
-      m <- lapply(algo, function(a) {
-        caret::train(
-          df~.,
-          data = cbind(df,x),
-          method = a,
-          trControl = ctrl,
-          ...
-        ) # lapply retorna diferentes valores de tuning (padronizar com seed?)
-      })
+      if(is.character(algo)) {
+        m <- lapply(algo, function(a) {
+          caret::train(
+            df~.,
+            data = cbind(df,x),
+            method = a,
+            trControl = ctrl,
+            ...
+          ) # lapply retorna diferentes valores de tuning (padronizar com seed?)
+        })
+      } else if (is.list(algo)) {
+        m <- caret::train(
+            df~.,
+            data = cbind(df,x),
+            method = algo,
+            trControl = ctrl,
+            ...
+          ) |> list()
+      }
+
       #################################
       l[[paste0("m", i, ".")]] <- m
     }
@@ -234,6 +251,9 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
 
   metrics <- sapply(z$spp_names, function(sp) {
     metrics <- lapply(m[[sp]], function(x) {
+      if(x$method == "custom") {
+        x$method <- algo2
+      }
       bt <- names(x$bestTune)
       res <- x$results[, !colnames(x$results) %in% bt]
       mx <- apply(res, 2, max)
