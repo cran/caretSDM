@@ -146,21 +146,6 @@ occurrences_as_df <- function(i) {
   return(res)
 }
 
-#' @rdname occurrences_sdm
-#' @export
-add_occurrences <- function(oc1, oc2) {
-  assert_class_cli(oc1, "occurrences")
-  if(is.data.frame(oc2)){
-    oc2 <- .occurrences(oc2)
-  }
-  assert_class_cli(oc2, "occurrences")
-  oc1_st <- oc1$occurrences
-  oc2_st <- oc2$occurrences
-  x <- rbind(oc1_st, oc2_st)
-  res <- occurrences_sdm(x)
-  return(res)
-}
-
 .occurrences <- function(x, independent_test = NULL, p = 0.1, crs = NULL,
                          independent_test_crs = NULL, ...) {
   assert_int_cli(crs, lower = 1024, upper = 32766, null.ok = TRUE)
@@ -305,6 +290,39 @@ add_occurrences <- function(oc1, oc2) {
   }
 
   return(occ)
+}
+
+#' @rdname occurrences_sdm
+#' @export
+add_occurrences <- function(oc1, oc2) {
+  assert_class_cli(oc1, "occurrences", null.ok = TRUE)
+  assert_class_cli(oc2, "occurrences", null.ok = TRUE)
+  if(is.null(oc1)) {return(oc2)}
+  if(is.null(oc2)) {return(oc1)}
+  assert_true_cli(oc1$crs == oc2$crs)
+  x <- rbind(oc1$occurrences, oc2$occurrences)
+  oc <- structure(list(
+    occurrences = x,
+    spp_names = c(oc1$spp_names, oc2$spp_names) |> unique(),
+    n_presences = table(x$species),
+    crs = oc1$crs
+  ), class = "occurrences")
+  if("pseudoabsences" %in% names(oc1) | "pseudoabsences" %in% names(oc2)){
+    oc$pseudoabsences <- list(data = c(oc1$pseudoabsences$data, oc2$pseudoabsences$data),
+                              method = oc1$pseudoabsences$method,
+                              n_set = c(oc1$pseudoabsences$n_set, oc2$pseudoabsences$n_set),
+                              n_pa = c(oc1$pseudoabsences$n_pa, oc2$pseudoabsences$n_pa))
+  }
+
+  if("esm" %in% names(oc1) | "esm" %in% names(oc2)){
+    spp_oc1 <- names(oc1$n_presences[oc1$n_presences > oc1$esm$n_records])
+    spp_oc2 <- names(oc2$n_presences[oc2$n_presences > oc2$esm$n_records])
+    spp1 <- as.character(na.omit(c(spp_oc1, spp_oc2)))
+    spp2 <- c(oc1$esm$spp, oc2$esm$spp)
+    oc$esm <- list(spp = unique(c(spp1, spp2)),
+                   n_records = max(oc1$esm$n_records, oc2$esm$n_records))
+  }
+  return(oc)
 }
 
 #' Print method for occurrences

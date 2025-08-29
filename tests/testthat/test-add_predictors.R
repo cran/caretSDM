@@ -25,7 +25,7 @@ sa <- sdm_area(pr_gpkg, cell_size = 100000, crs = 6933)
 test_that("add_predictors - rasterStack", {
   sa_pred <- add_predictors(sa, pr_raster)
   expect_equal(
-    predictors(sa_pred),
+    get_predictor_names(sa_pred),
     c(
       "GID0", "CODIGOIB1", "NOMEUF2", "SIGLAUF3", "wc2.1_10m_bio_1",
       "wc2.1_10m_bio_12"
@@ -47,6 +47,21 @@ test_that("add_predictors - rasterStack", {
   )
 })
 
+test_that("add_predictors - rasterStack", {
+  pr_raster2 <- pr_raster
+  pr_gpkg2 <- pr_gpkg
+  names(pr_raster2) <- 1:2
+  colnames(pr_gpkg2) <- c(3:5, "SIGLAUF3",  "geom")
+  sa2 <- sdm_area(pr_gpkg2, cell_size = 100000, crs = 6933)
+  sa_pred <- add_predictors(sa2, pr_raster2)
+  expect_equal(
+    get_predictor_names(sa_pred),
+    c(
+      "X3", "X4", "X5", "SIGLAUF3", "X1", "X2"
+    )
+  )
+})
+
 test_that("add_predictors - rasterStack selecionando uma variável", {
   sa_pred <- add_predictors(sa, pr_raster, c("wc2.1_10m_bio_1"))
   expect_true(sf::st_geometry_type(sa_pred$grid) |> unique() == "POLYGON")
@@ -61,7 +76,7 @@ test_that("add_predictors - rasterStack selecionando uma variável", {
     null.ok = FALSE
   )
   expect_equal(
-    predictors(sa_pred),
+    get_predictor_names(sa_pred),
     c("GID0", "CODIGOIB1", "NOMEUF2", "SIGLAUF3", "wc2.1_10m_bio_1")
   )
 })
@@ -80,7 +95,7 @@ test_that("add_predictors - stars", {
     null.ok = FALSE
   )
   expect_equal(
-    predictors(sa_pred),
+    get_predictor_names(sa_pred),
     c(
       "GID0", "CODIGOIB1", "NOMEUF2", "SIGLAUF3", "wc2.1_10m_bio_1",
       "wc2.1_10m_bio_12"
@@ -102,7 +117,7 @@ test_that("add_predictors - sf", {
     null.ok = FALSE
   )
   expect_equal(
-    predictors(sa_pred),
+    get_predictor_names(sa_pred),
     c(
       "GID0.x", "CODIGOIB1.x", "NOMEUF2.x", "SIGLAUF3.x", "GID0.y",
       "CODIGOIB1.y", "NOMEUF2.y", "SIGLAUF3.y"
@@ -136,7 +151,7 @@ test_that("add_predictors - stack/terra", {
     null.ok = FALSE
   )
   expect_equal(
-    predictors(sa_pred),
+    get_predictor_names(sa_pred),
     c(
       "GID0", "CODIGOIB1", "NOMEUF2", "SIGLAUF3", "wc2.1_10m_bio_1",
       "wc2.1_10m_bio_12"
@@ -145,7 +160,7 @@ test_that("add_predictors - stack/terra", {
 })
 
 test_that("add_predictors, but there is no overlap", {
-  box <- st_bbox(c(xmin = 16.1, xmax = 16.6, ymax = 48.6, ymin = 47.9), crs = st_crs(4326))
+  box <- sf::st_bbox(c(xmin = 16.1, xmax = 16.6, ymax = 48.6, ymin = 47.9), crs = sf::st_crs(4326))
   box <- sf::st_transform(box, crs=6933)
   expect_error(add_predictors(sa, box))
 })
@@ -436,3 +451,15 @@ test_that("add_predictors - correção do tidyr::drop_na: drop_na modifica o bbo
  expect_equal(bbox_intersect, sf::st_bbox(sa_pred$grid))
 })
 
+# test cell_size=NULL
+test_that("add_predictors - cell_size=NULL", {
+  sa <- sdm_area(bioc[,,,1], cell_size = NULL)
+  sa_pred <- add_predictors(sa, bioc[,,,-1])
+  expect_equal(
+    get_predictor_names(sa_pred),
+    c("bio1",  "bio4",  "bio12")
+  )
+  expect_true(
+    sa_pred$grid |> nrow() <=  sa$grid |> nrow()
+  )
+})

@@ -3,7 +3,7 @@
 #' This function includes scenarios in the \code{sdm_area} object.
 #'
 #' @usage add_scenarios(sa, scen = NULL, scenarios_names = NULL, pred_as_scen = TRUE,
-#'                      variables_selected = NULL, stationary = NULL)
+#'                      variables_selected = NULL, stationary = NULL, crop_area = NULL)
 #'
 #' @param sa A \code{sdm_area} or \code{input_sdm} object.
 #' @param scen \code{RasterStack}, \code{SpatRaster} or \code{stars} object. If \code{NULL} adds
@@ -14,6 +14,7 @@
 #' @param stationary Names of variables from \code{sa} that should be used in scenarios as
 #' stationary variables.
 #' @param pred_as_scen Logical. If \code{TRUE} adds the current predictors as a scenario.
+#' @param crop_area A \code{sf} object to crop the \code{scen} object if necessary.
 #' @param i A \code{sdm_area} or \code{input_sdm} object.
 #'
 #' @details
@@ -75,13 +76,13 @@
 #'
 #' @export
 add_scenarios <- function(sa, scen = NULL, scenarios_names = NULL, pred_as_scen = TRUE,
-                          variables_selected = NULL, stationary = NULL) {
+                          variables_selected = NULL, stationary = NULL, crop_area = NULL) {
   UseMethod("add_scenarios", scen)
 }
 
 #' @export
 add_scenarios.NULL <- function(sa, scen = NULL, scenarios_names = NULL, pred_as_scen = TRUE,
-                               variables_selected = NULL, stationary = NULL) {
+                               variables_selected = NULL, stationary = NULL, crop_area = NULL) {
   if(is_sdm_area(sa)){
     sa_teste <- sa
     sa_teste$data <- list(current = sa_teste$grid)
@@ -97,24 +98,29 @@ add_scenarios.NULL <- function(sa, scen = NULL, scenarios_names = NULL, pred_as_
 
 #' @export
 add_scenarios.RasterStack <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_scen = TRUE,
-                                      variables_selected = NULL, stationary = NULL) {
+                                      variables_selected = NULL, stationary = NULL,
+                                      crop_area = NULL) {
   scen <- stars::st_as_stars(scen)
-  sa <- add_scenarios(sa, scen, scenarios_names, pred_as_scen, variables_selected, stationary)
+  sa <- add_scenarios(sa, scen, scenarios_names, pred_as_scen, variables_selected, stationary,
+                      crop_area)
   return(sa)
 }
 
 #' @export
 add_scenarios.SpatRaster <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_scen = TRUE,
-                                     variables_selected = NULL, stationary = NULL) {
+                                     variables_selected = NULL, stationary = NULL,
+                                     crop_area = NULL) {
   scen <- stars::st_as_stars(scen)
   names(stars::st_dimensions(scen)) <- c("x", "y", "band")
-  sa <- add_scenarios(sa, scen, scenarios_names, pred_as_scen, variables_selected, stationary)
+  sa <- add_scenarios(sa, scen, scenarios_names, pred_as_scen, variables_selected, stationary,
+                      crop_area)
   return(sa)
 }
 
 #' @export
 add_scenarios.stars <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_scen = TRUE,
-                                variables_selected = NULL, stationary = NULL) {
+                                variables_selected = NULL, stationary = NULL,
+                                crop_area = NULL) {
   # stationary assertion must include an empty vector. Empty vector must be changed to NULL.
   if (is_input_sdm(sa)) {
     if("scenarios" %in% names(sa)){
@@ -128,6 +134,11 @@ add_scenarios.stars <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_s
     add_sc <- ifelse(length(sa$data)>0, TRUE, FALSE)
   } else if ( is_sdm_area(sa) ) {
     add_sc <- ifelse(length(sa$scenarios$data)>0, TRUE, FALSE)
+  }
+
+  if(!is.null(crop_area)){
+    assert_class_cli(crop_area, "sf")
+    scen <- sf::st_crop(scen, crop_area)
   }
 
   if (is.null(scenarios_names)) { scenarios_names <- names(scen) }
@@ -145,6 +156,20 @@ add_scenarios.stars <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_s
                   "i" = "Check for: {missing_vars}"))
     }
     scen <- scen[, , , variables_selected]
+
+    bbox1 <- st_as_sfc(st_bbox(scen))
+    bbox2 <- st_as_sfc(st_bbox(st_transform(stationary_grd, crs = st_crs(scen))))
+    suppressMessages(intersects <- st_intersects(bbox1,
+                                                 bbox2,
+                                                 sparse = FALSE)[1,1])
+    if(!intersects) {
+      cli::cli_abort(c("Stationary data do not intersect with scenarios data",
+                       "i" = "If you are projecting for the same area as modeling, your scenarios
+                              are not intersecting with current area.",
+                       "i" = "If you are trying to make a invasiveness assessment, you need to add
+                              a current scenario before adding future scenarios."))
+    }
+
     l <- list()
     for (i in cli::cli_progress_along(1:length(scen), "Reescaling data")) {
       l[[scenarios_names[i]]]  <- scen[i] |>
@@ -178,7 +203,18 @@ add_scenarios.stars <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_s
     stationary_grd <- sa$grid |> dplyr::select(all_of(c("cell_id", stationary)))
     variables_selected <- pres_names[!pres_names %in% stationary]
     scen <- scen[, , , variables_selected]
-
+    bbox1 <- st_as_sfc(st_bbox(scen))
+    bbox2 <- st_as_sfc(st_bbox(st_transform(stationary_grd, crs = st_crs(scen))))
+    suppressMessages(intersects <- st_intersects(bbox1,
+                                                    bbox2,
+                                                    sparse = FALSE)[1,1])
+    if(!intersects) {
+      cli::cli_abort(c("Stationary data do not intersect with scenarios data",
+                       "i" = "If you are projecting for the same area as modeling, your scenarios
+                              are not intersecting with current area.",
+                       "i" = "If you are trying to make a invasiveness assessment, you need to add
+                              a current scenario before adding future scenarios."))
+    }
     l <- list()
     if(unique(sf::st_geometry_type(sa$grid)) == "LINESTRING") {
       for (i in cli::cli_progress_along(1:length(scen), "Reescaling data")) {
@@ -198,7 +234,7 @@ add_scenarios.stars <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_s
           suppressWarnings() |>
           cbind(stationary_grd) |>
           dplyr::select(-"geometry.1") |>
-          dplyr::relocate(c("cell_id", variables_selected, stationary, "geometry"))
+          dplyr::relocate(c("cell_id", all_of(c(variables_selected, stationary)), "geometry"))
       }
     } else {
       stationary_grd <- sf::st_transform(stationary_grd, sf::st_crs(scen))
@@ -232,6 +268,7 @@ add_scenarios.stars <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_s
     sa$scenarios <- sa_data
     return(sa)
 
+####################################################################################################
   } else if ( is.null(stationary) ) {
 
     if ( !test_variables_names(sa, scen) ) {
@@ -272,32 +309,41 @@ add_scenarios.stars <- function(sa, scen=NULL, scenarios_names = NULL, pred_as_s
             cell_size = sa$cell_size,
             crs = grid_t |> sf::st_crs(),
             variables_selected = variables_selected,
-            gdal = TRUE,
-            crop_by = grid_t
+            gdal = sa$parameters$gdal,
+            lines_as_sdm_area = sa$parameters$lines_as_sdm_area
           )
 
-        l[[scenarios_names[i]]]  <- scen_area$grid |>
-          dplyr::select(-"cell_id") |>
-          stats::aggregate(grid_t, mean) |>
-          sf::st_cast("LINESTRING") |>
-          suppressWarnings() |>
-          cbind(grid_t) |>
-          dplyr::select(c("cell_id", variables_selected, "geometry"))
+        l[[scenarios_names[i]]]  <- scen_area$grid #|>
+          #dplyr::select(-"cell_id") |>
+          #stats::aggregate(grid_t, mean) |>
+          #sf::st_cast("LINESTRING") |>
+          #suppressWarnings() |>
+          #cbind(grid_t) |>
+          #dplyr::select(c("cell_id", variables_selected, "geometry"))
       }
     } else {
-      grid_t <- sf::st_transform(grid_t, sf::st_crs(scen))
+      #grid_t <- sf::st_transform(grid_t, sf::st_crs(scen))
       for (i in cli::cli_progress_along(1:length(scen), "Reescaling data")) {
-        l[[scenarios_names[i]]]  <- scen[i] |>
-          stats::aggregate(grid_t, mean) |>
-          sf::st_as_sf() |>
-          cbind(grid_t) |>
-          sf::st_transform(sf::st_crs(sa$grid)) |>
-          tidyr::drop_na() |>
-          dplyr::select(dplyr::all_of(c("cell_id", variables_selected, "geometry")))
+        scen_area <- scen[i] |>
+          sdm_area(
+            cell_size = sa$cell_size,
+            crs = grid_t |> sf::st_crs(),
+            variables_selected = variables_selected,
+            gdal = sa$parameters$gdal,
+            lines_as_sdm_area = sa$parameters$lines_as_sdm_area
+          )
+
+        l[[scenarios_names[i]]]  <- scen_area$grid#[i] |>
+          #stats::aggregate(grid_t, mean) |>
+          #sf::st_as_sf() |>
+          #cbind(grid_t) |>
+          #sf::st_transform(sf::st_crs(sa$grid)) |>
+          #tidyr::drop_na() |>
+          #dplyr::select(dplyr::all_of(c("cell_id", variables_selected, "geometry")))
       }
     }
 
-    if (pred_as_scen) {
+    if (pred_as_scen & !"current" %in% scenarios_names(sa_data)) {
       l[["current"]] <- sa$grid |>
         dplyr::select(c(cell_id, dplyr::all_of(variables_selected)))
     }

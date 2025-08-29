@@ -10,20 +10,28 @@
 #' @param cell_size \code{numeric}. The cell size to be used in models.
 #' @param crs \code{numeric}. Indicates which EPSG should the output grid be in. If \code{NULL},
 #' epsg from \code{x} is used.
-#' @param variables_selected A \code{character} vector with variables in \code{x} to be used in models.
+#' @param variables_selected A \code{character} vector with variables in \code{x} to be used in
+#' models.
 #' If \code{NULL} (standard), all variables in \code{x} are used.
 #' @param gdal Boolean. Force the use or not of GDAL when available. See details.
 #' @param crop_by A shape from \code{sf} to crop \code{x}.
-#' @param lines_as_sdm_area Boolean. If \code{x} is a \code{sf} with LINESTRING geometry, it can be used
+#' @param lines_as_sdm_area Boolean. If \code{x} is a \code{sf} with LINESTRING geometry, it can be
+#' used
 #' to model species distribution in lines and not grid cells.
 #' @param i A \code{sdm_area} or a \code{input_sdm} object.
+#' @param sa1 A \code{sdm_area} object.
+#' @param sa2 A \code{sdm_area} object.
 #'
 #' @details
 #' The function returns a \code{sdm_area} object with a grid built upon the \code{x} parameter.
 #' There are two ways to make the grid and resample the variables in \code{sdm_area}: with and
-#' without gdal. As standard, if gdal is available in you machine it will be used (\code{gdal = TRUE}),
+#' without gdal. As standard, if gdal is available in you machine it will be used
+#' (\code{gdal = TRUE}),
 #' otherwise sf/stars will be used.
 #' \code{get_sdm_area} will return the grid built by \code{sdm_area}.
+#' \code{add_sdm_area} will sum two \code{sdm_area} objects. As geoprocessing in \code{caretSDM} is
+#' performed using \code{sf} objects, \code{add_sdm_area} simply applies a \code{rbind} in the two
+#' different areas.
 #'
 #' @returns A \code{sdm_area} object containing:
 #'    \item{grid}{\code{sf} with \code{POLYGON} geometry representing the grid for the study area.}
@@ -198,9 +206,13 @@ sdm_area.stars <- function(x, cell_size = NULL, crs = NULL, variables_selected =
   assert_number_cli(
     cell_size,
     na.ok = FALSE,
-    null.ok = FALSE,
+    null.ok = TRUE,
     lower = 0
   )
+
+  if(is.null(cell_size)) {
+    cell_size <- as.numeric(stars::st_res(x))[1]
+  }
 
   x_var <- x |>
     .try_split() |>
@@ -216,16 +228,10 @@ sdm_area.stars <- function(x, cell_size = NULL, crs = NULL, variables_selected =
     "geometry"
   )
 
-  assert_number_cli(
-    cell_size,
-    na.ok = FALSE,
-    null.ok = FALSE,
-    lower = 0
-  )
   assert_class_cli(
     sf::st_crs(x),
     classes = "crs",
-    null.ok = FALSE,
+    null.ok = TRUE,
     .var.name = "x"
   )
   if (is.null(crs)) {
@@ -236,6 +242,7 @@ sdm_area.stars <- function(x, cell_size = NULL, crs = NULL, variables_selected =
       error = function(e) NA
     )
   }
+
   if (is.na(crs) || is.na(crs$input)){
     cli_abort(c("x" = "crs is invalid."))
   }
@@ -248,7 +255,8 @@ sdm_area.stars <- function(x, cell_size = NULL, crs = NULL, variables_selected =
     l <- list(
       grid = .sdm_area_from_stars_using_gdal(x, cell_size, crs, crop_by) |>
         dplyr::select(dplyr::all_of(var_names_final)),
-      cell_size = cell_size
+      cell_size = cell_size,
+      parameters = list(gdal = gdal, lines_as_sdm_area = lines_as_sdm_area)
     )
 
   } else {
@@ -260,7 +268,8 @@ sdm_area.stars <- function(x, cell_size = NULL, crs = NULL, variables_selected =
     l <- list(
       grid = .sdm_area_from_stars_using_stars(x, cell_size, crs, crop_by) |>
         dplyr::select(dplyr::all_of(var_names_final)),
-      cell_size = cell_size
+      cell_size = cell_size,
+      parameters = list(gdal = gdal, lines_as_sdm_area = lines_as_sdm_area)
     )
   }
   if ((l$grid |> nrow()) > 0) {
@@ -470,7 +479,7 @@ sdm_area.sf <- function(x, cell_size = NULL, crs = NULL, variables_selected = NU
     cli_abort(c("x" = "crs is invalid."))
   }
 
-  sa <- .detect_sdm_area(x, cell_size, crs)
+  sa <- .detect_sdm_area(x, cell_size, crs, gdal, lines_as_sdm_area)
   if (checkmate::test_class(sa, "sdm_area")){
     return(invisible(sa))
   }
@@ -519,7 +528,8 @@ sdm_area.sf <- function(x, cell_size = NULL, crs = NULL, variables_selected = NU
     l <- list(
       grid = .sdm_area_from_sf_using_gdal(x, cell_size, crs) |>
         dplyr::select(dplyr::all_of(var_names_final)),
-      cell_size = cell_size
+      cell_size = cell_size,
+      parameters = list(gdal = gdal, lines_as_sdm_area = lines_as_sdm_area)
     )
   } else {
     info_msg <- c("!" = "Making grid over the study area is an expensive task. Please, be patient!")
@@ -530,7 +540,8 @@ sdm_area.sf <- function(x, cell_size = NULL, crs = NULL, variables_selected = NU
     l <- list(
       grid = .sdm_area_from_sf_using_stars(x, cell_size, crs) |>
         dplyr::select(dplyr::all_of(var_names_final)),
-      cell_size = cell_size
+      cell_size = cell_size,
+      parameters = list(gdal = gdal, lines_as_sdm_area = lines_as_sdm_area)
     )
   }
 
@@ -915,18 +926,6 @@ sdm_area.sf <- function(x, cell_size = NULL, crs = NULL, variables_selected = NU
   return(final_sf)
 }
 
-.sdm_area <- function(x) {
-  sa <- structure(
-    list(
-      grid = x$grid,
-      cell_size = x$cell_size
-    ),
-    class = "sdm_area"
-  )
-  .check_sdm_area(sa)
-  return(sa)
-}
-
 .check_sdm_area <- function(x) {
   error_collection <- checkmate::makeAssertCollection()
 
@@ -1035,7 +1034,7 @@ sdm_area.sf <- function(x, cell_size = NULL, crs = NULL, variables_selected = NU
 }
 
 
-.detect_sdm_area <- function(x, cell_size, crs){
+.detect_sdm_area <- function(x, cell_size, crs, gdal, lines_as_sdm_area){
   error_collection <- checkmate::makeAssertCollection()
   assert_class_cli(
     x,
@@ -1129,7 +1128,8 @@ sdm_area.sf <- function(x, cell_size = NULL, crs = NULL, variables_selected = NU
   }
   l <- list(
     grid = x,
-    cell_size = cell_size_calc
+    cell_size = cell_size_calc,
+    parameters = list(gdal = gdal, lines_as_sdm_area = lines_as_sdm_area)
   )
   sa <- .sdm_area(l)
   return(sa)
@@ -1274,6 +1274,53 @@ get_sdm_area <- function(i) {
   return(x)
 }
 
+#' @rdname sdm_area
+#' @export
+add_sdm_area <- function(sa1, sa2) {
+  assert_class_cli(sa1, "sdm_area", null.ok = TRUE)
+  assert_class_cli(sa2, "sdm_area", null.ok = TRUE)
+  if(is.null(sa1)) {return(sa2)}
+  if(is.null(sa2)) {return(sa1)}
+  assert_true_cli(sa1$parameters$gdal == sa2$parameters$gdal)
+  assert_true_cli(sa1$parameters$lines_as_sdm_area == sa2$parameters$lines_as_sdm_area)
+  assert_true_cli(sa1$cell_size == sa2$cell_size)
+  test <- suppressWarnings(all(colnames(sa1$grid) == colnames(sa2$grid)))
+  if(!test) {
+    cli::cli_abort(c("All variables in {.var sa1} must also be present in {.var sa2}.",
+                     "x" = "{.var sa1} has variables {get_predictor_names(sa1)},
+                     while {.var sa2} has variables {get_predictor_names(sa2)}.",
+                     "i" = "You can use the function select_predictors to subset variables in a sdm_area object."))
+  }
+
+  grd <- rbind(sa1$grid, sa2$grid)
+  grd$cell_id <- c(sa1$grid$cell_id, max(sa1$grid$cell_id)+sa2$grid$cell_id)
+  if("scenarios" %in% names(sa1)){
+    if("scenarios" %in% names(sa2)){
+      dt <- c(sa1$scenarios$data, sa2$scenarios$data)
+    } else {
+      dt <- sa1$scenarios$data
+    }
+  }
+  l <- list( grid = grd,
+             cell_size = sa1$cell_size,
+             parameters = sa1$parameters)
+  sa <- .sdm_area(l)
+  if(exists("dt")){sa$data <- dt}
+  return(sa)
+}
+
+.sdm_area <- function(x) {
+  sa <- structure(
+    list(
+      grid = x$grid,
+      cell_size = x$cell_size,
+      parameters = x$parameters
+    ),
+    class = "sdm_area"
+  )
+  .check_sdm_area(sa)
+  return(sa)
+}
 
 #' @exportS3Method base::print
 print.sdm_area <- function(x, ...) {

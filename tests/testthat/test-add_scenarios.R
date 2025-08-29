@@ -18,9 +18,59 @@ if (fs::dir_exists(here::here("tests", "testthat", "testdata"))) {
 }
 sa <- sdm_area(pr_gpkg, cell_size = 100000, crs = 6933)
 sa <- add_predictors(sa, pr_raster)
-sa <- dplyr::select(sa, c("wc2.1_10m_bio_1","wc2.1_10m_bio_12"))
+sa <- select_predictors(sa, c("wc2.1_10m_bio_1","wc2.1_10m_bio_12"))
 sa <- set_predictor_names(sa, c("bio1", "bio12"))
 scen <- scen[,,,c("bio1", "bio12")]
+
+# Invasiveness tests
+#library(stars)
+#library(sf)
+#sf_use_s2(FALSE)
+#scen2 <- read_stars("~/Documents/caretSDM_bkup/input_data/WorldClim_data_future/mi_ssp585_10_2090.tif")
+#current <- read_stars(list.files("~/Documents/caretSDM_bkup/input_data/WorldClim_data_current/", full.names=T), along = "band")
+#names(current) <- "current"
+#current <- sf::st_crop(current[,,,c("1.tif", "4.tif", "12.tif")], rs)
+#current <- stars::st_set_dimensions(current, "band", values = c("bio1", "bio4","bio12"))
+#
+#future <- read_stars(list.files("~/Documents/Mapas/Rasters/WorldClim 2.1/future_10m/", full.names=T))
+#names(future) <- names(scen)
+#future <- sf::st_crop(future[,,,c("bio01", "bio04", "bio12")], rs)
+#future <- stars::st_set_dimensions(future, "band", values = c("bio1", "bio4","bio12"))
+#
+#br <- st_read("~/Documents/caretSDM_bkup/input_data/Brasil/estadosl_2007.shp")
+#rs <- br[br$SIGLAUF3 == "RS",]
+#st_crs(rs) <- 4326
+#scen2 <- sf::st_crop(scen2[,,,c("bio01", "bio04", "bio12")], rs)
+#scen2 <- stars::st_set_dimensions(scen2, "band", values = c("bio1", "bio4","bio12"))
+#sf_use_s2(TRUE)
+#scen <- scen2
+#scenarios_names = NULL
+#pred_as_scen = FALSE
+#variables_selected = NULL
+#stationary = NULL
+
+
+test_that("add_scenarios - invasiveness", {
+  sa_pred <- add_scenarios(sa, scen_rs[,,,c("bio1", "bio12")], pred_as_scen = FALSE)
+  expect_equal(
+    get_predictor_names(sa_pred),
+    c("bio1", "bio12")
+  )
+  expect_equal(
+    get_predictor_names(sa_pred),
+    get_predictor_names(sa_pred$scenarios)
+  )
+  expect_equal(
+    names(sa_pred$scenarios$data$mi_ssp585_2090),
+    c("cell_id", "bio1", "bio12", "geometry")
+  )
+  expect_equal(round(as.numeric(sf::st_bbox(sa_pred$scenarios$data$mi_ssp585_2090))),
+               c(-5564042, -4121459, -4764042, -3321459))
+  expect_equal(round(as.numeric(sf::st_bbox(sa_pred$grid))),
+               c(-5301744, -3295037, -4601744.0, -2795037))
+  expect_false(all(round(as.numeric(sf::st_bbox(sa_pred$scenarios$data$mi_ssp585_2090))) ==
+                 round(as.numeric(sf::st_bbox(sa_pred$grid)))))
+})
 
 test_that("add_scenarios - stars", {
   sa_pred <- add_scenarios(sa, scen)
@@ -116,7 +166,7 @@ test_that("add_scenarios - input_sdm", {
 test_that("add_scenarios - stars e vars tem nomes diferentes", {
   sa <- sdm_area(pr_gpkg, cell_size = 20000, crs = 6933)
   sa <- add_predictors(sa, pr_raster)
-  sa <- select(sa, c("wc2.1_10m_bio_1","wc2.1_10m_bio_12"))
+  sa <- select_predictors(sa, c("wc2.1_10m_bio_1","wc2.1_10m_bio_12"))
   expect_no_error(sa_scen <- add_scenarios(sa, scen))
   expect_equal(get_predictor_names(sa),get_predictor_names(sa_scen))
   expect_true(all(get_predictor_names(sa) %in% names(sa_scen$scenarios$data$ca_ssp245_2090)))
@@ -176,7 +226,6 @@ test_that("add_scenarios - stationary data/input_sdm", {
   i_pred <- add_scenarios(i_pred, scen, stationary = c("GID0", "CODIGOIB1",
                                                          "NOMEUF2", "SIGLAUF3"))
   expect_equal(length(i_pred$scenarios$data), 6)
-
 })
 
 test_that("select_scenarios", {
@@ -204,7 +253,6 @@ test_that("select_scenarios", {
   )
   expect_error(select_scenarios(i_pred, c("a")))
   expect_error(select_scenarios(i_pred, c("a")))
-
 })
 
 test_that("set_scenarios_names", {
@@ -227,3 +275,72 @@ test_that("set_scenarios_names", {
   )
 })
 
+# test cell_size=NULL
+test_that("add_scenarios - cell_size=NULL", {
+  sa <- sdm_area(bioc[,,,c(1,3)], cell_size = NULL)
+  i <- input_sdm(sa)
+  sa_pred <- add_scenarios(i, scen)
+  expect_equal(
+    scenarios_names(sa_pred),
+    c("current", "ca_ssp245_2090", "ca_ssp585_2090", "mi_ssp245_2090", "mi_ssp585_2090")
+  )
+  expect_equal(sum(na.omit(as.data.frame(bioc))$band == "bio1"), sa_pred$scenarios$data$current |> nrow())
+  expect_equal(sum(na.omit(as.data.frame(scen["ca_ssp245_2090"]))$band == "bio1"),
+               sa_pred$scenarios$data$ca_ssp245_2090 |> nrow())
+})
+
+test_that("add_scenarios", {
+  bioc <- bioc[,,,c(1,3)]
+  expect_error(
+    sdm_area(parana, cell_size = 100000, crs = 6933) |>
+      add_predictors(bioc) |>
+      add_scenarios(scen_rs, stationary = c("GID0", "CODIGOIB1", "NOMEUF2", "SIGLAUF3"))
+  )
+  expect_error(
+    sdm_area(parana, cell_size = 100000, crs = 6933) |>
+      add_predictors(bioc) |>
+      input_sdm() |>
+      add_scenarios(scen_rs, stationary = c("GID0", "CODIGOIB1", "NOMEUF2", "SIGLAUF3"))
+  )
+  sa <- sdm_area(bioc, cell_size = 100000, crs = 6933)
+  sa_pred <- add_scenarios(sa, scen, crop_area = parana)
+  expect_equal(
+    scenarios_names(sa_pred),
+    c("ca_ssp245_2090", "ca_ssp585_2090", "mi_ssp245_2090", "mi_ssp585_2090", "current")
+  )
+  expect_true(sum(na.omit(as.data.frame(bioc))$band == "bio1") > sa_pred$scenarios$data$current |> nrow())
+  expect_true(sum(na.omit(as.data.frame(scen["ca_ssp245_2090"]))$band == "bio1") >
+               sa_pred$scenarios$data$ca_ssp245_2090 |> nrow())
+  expect_warning(sa <- sdm_area(parana, cell_size = 100000, crs = 6933) |>
+    add_predictors(bioc) |>
+    add_scenarios(scen_rs[,,,c(1,3)], pred_as_scen = FALSE))
+  #expect_true(!"current" %in% scenarios_names(sa))
+
+  sa <- sdm_area(rivs, cell_size = 100000, crs = 6933, lines_as_sdm_area = TRUE) |>
+    add_predictors(bioc) |>
+    add_scenarios(scen, stationary = c("LENGTH_KM", "DIST_DN_KM"), pred_as_scen = FALSE)
+  expect_true(all(c("LENGTH_KM", "DIST_DN_KM") %in% colnames(sa$scenarios$data$ca_ssp245_2090)))
+  expect_equal(as.character(unique(sf::st_geometry_type(sa$grid))), "LINESTRING")
+
+  sa <- sdm_area(rivs, cell_size = 100000, crs = 6933, lines_as_sdm_area = TRUE) |>
+    add_predictors(bioc) |>
+    input_sdm() |>
+    add_scenarios(scen, stationary = c("LENGTH_KM", "DIST_DN_KM"), pred_as_scen = FALSE)
+  expect_true(all(c("LENGTH_KM", "DIST_DN_KM") %in% colnames(sa$scenarios$data$ca_ssp245_2090)))
+  expect_equal(as.character(unique(sf::st_geometry_type(sa$scenarios$data$ca_ssp245_2090))), "LINESTRING")
+
+  sa <- sdm_area(rivs, cell_size = 100000, crs = 6933, lines_as_sdm_area = TRUE) |>
+    add_predictors(bioc) |>
+    select_predictors(c("bio1", "bio12")) |>
+    input_sdm() |>
+    add_scenarios(scen, pred_as_scen = FALSE)
+  expect_true(all(!c("LENGTH_KM", "DIST_DN_KM") %in% colnames(sa$scenarios$data$ca_ssp245_2090)))
+
+  sa2 <- set_scenarios_names(sa, c("a", "b", "c", "d", "e"))
+  expect_equal(scenarios_names(sa2), c("a", "b", "c", "d", "e"))
+  scenarios <- get_scenarios_data(sa2)
+  expect_equal(names(scenarios), c("a", "b", "c", "d", "e"))
+  expect_equal(class(scenarios), "list")
+  expect_equal(class(scenarios$a), c("sf", "data.frame"))
+  expect_null(get_scenarios_data(occ))
+})

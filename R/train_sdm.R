@@ -23,6 +23,9 @@
 #' @param ... Additional arguments to be passed to \code{caret::train} function.
 #' @param parallel Should a paralelization method be used (not yet implemented)?
 #' @param i A \code{models} or a \code{input_sdm} object.
+#' @param m1 A \code{models} object.
+#' @param m2 A \code{models} object.
+#'
 #'
 #' @return A \code{models} or a \code{input_sdm} object.
 #'
@@ -66,7 +69,7 @@
 #' i <- input_sdm(oc, sa)
 #'
 #' # Pseudoabsence generation:
-#' i <- pseudoabsences(i, method="bioclim")
+#' i <- pseudoabsences(i, method = "random")
 #'
 #' # Custom trainControl:
 #' ctrl_sdm <- caret::trainControl(method = "repeatedcv",
@@ -78,7 +81,7 @@
 #'                                 savePredictions = "all")
 #'
 #' # Train models:
-#' i <- train_sdm(i, algo = c("naive_bayes"), ctrl=ctrl_sdm) |>
+#' i <- train_sdm(i, algo = c("naive_bayes"), ctrl = ctrl_sdm) |>
 #' suppressWarnings()
 #'
 #' @importFrom sf st_centroid st_as_sf st_join st_intersection st_geometry_type
@@ -138,11 +141,6 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
   }
 
   l <- list()
-  if ("independent_test" %in% names(z)) {
-    indep_val <- list()
-    it <- z$independent_test
-    it <- stars::st_extract(pred$grid[[selected_vars]], it)
-  }
 
   l <- sapply(z$spp_names, function(sp) {
 
@@ -168,8 +166,8 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
       }
     }
 
-    for (i in 1:length(z$pseudoabsences$data[[sp]])) {
-      pa <- z$pseudoabsences$data[[sp]][[i]]
+    for (j in 1:length(z$pseudoabsences$data[[sp]])) {
+      pa <- z$pseudoabsences$data[[sp]][[j]]
       pa <- pa[, names(occ2)[match(names(pa), names(occ2))]]
       occ2 <- occ2[, names(occ2)[match(names(pa), names(occ2))]]
       x <- rbind(occ2, pa)
@@ -177,64 +175,52 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
       df <- as.factor(c(rep("presence", nrow(occ2)), rep("pseudoabsence", nrow(pa))))
 
       # TRAIN MODELS ##################
-      #if ("esm" %in% names(z)) {
-      #  if(sp %in% z$esm$spp ) {
-      #    cli::cli_progress_message("ESM species")
-      #    vars_comb <- colnames(x) |> utils::combn(2)
-      #    m1 <- list()
-      #    for (vars in 1:ncol(vars_comb)) {
-      #      m1[[vars]] <- lapply(algo, function(a) {
-      #        caret::train(
-      #          df~.,
-      #          data = cbind(df,x[,vars_comb[,vars]]),
-      #          method = a,
-      #          trControl = ctrl
-      #        )
-      #      })
-      #    }
-#
-      #  } else if(!is.null(z$esm$n_records)) {
-      #    if (z$n_presences[sp] <  z$esm$n_records) {
-      #      cli::cli_progress_message("ESM records")
-      #      vars_comb <- colnames(x) |> utils::combn(2)
-      #      for (vars in 1:ncol(vars_comb)) {
-      #        m1[[vars]] <- lapply(algo, function(a) {
-      #          caret::train(
-      #            df~.,
-      #            data = cbind(df,x[,vars_comb[,vars]]),
-      #            method = a,
-      #            trControl = ctrl
-      #          )
-      #        })
-      #      }
-      #    }
-      #  }
-      #  m <- unlist(m1, recursive = FALSE)
-      #  l[[paste0("m", i, ".")]] <- m
-      #  next
-      #}
-      if(is.character(algo)) {
+      if (sp %in% z$esm$spp) {
+        cli::cli_progress_message("ESM species")
+        m1 <- list()
+        vars_comb <- colnames(x) |> utils::combn(2)
+        if(is.character(algo)) {
+          for (vars in 1:ncol(vars_comb)) {
+            m1[[vars]] <- lapply(algo, function(a) {
+              caret::train(
+                df~.,
+                data = cbind(df,x[,vars_comb[,vars]]),
+                method = a,
+                trControl = ctrl
+              )
+            })
+          }
+          m <- unlist(m1, recursive = FALSE)
+        } else if (is.list(algo)) {
+          for (vars in 1:ncol(vars_comb)) {
+            m1[[vars]] <- caret::train(
+              df~.,
+              data = cbind(df,x),
+              method = algo,
+              trControl = ctrl
+            ) |> list()
+          }
+          m <- unlist(m1, recursive = FALSE)
+        }
+      } else if(is.character(algo)) {
+        #cli::cli_progress_message("ESM not applied (records do not match condition)")
         m <- lapply(algo, function(a) {
           caret::train(
             df~.,
             data = cbind(df,x),
             method = a,
-            trControl = ctrl,
-            ...
+            trControl = ctrl
           ) # lapply retorna diferentes valores de tuning (padronizar com seed?)
         })
       } else if (is.list(algo)) {
         m <- caret::train(
-            df~.,
-            data = cbind(df,x),
-            method = algo,
-            trControl = ctrl,
-            ...
-          ) |> list()
+          df~.,
+          data = cbind(df,x),
+          method = algo,
+          trControl = ctrl
+        ) |> list()
       }
-
-      #################################
-      l[[paste0("m", i, ".")]] <- m
+      l[[paste0("m", j, ".")]] <- m
     }
     return(l)
   }, simplify = TRUE, USE.NAMES = TRUE)
@@ -243,7 +229,7 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
     unlist(x, recursive = FALSE)
   })
 
-  if(length(algo) == 1) {
+  if(length(algo2) == 1) {
     for (j in 1:length(m)) {
       names(m[[j]]) <- paste0(names(m[[j]]), 1)
     }
@@ -271,6 +257,28 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
     algorithms = algo2,
     models = m
   )
+
+  if ("independent_test" %in% names(z)) {
+    it <- sf::st_join(z$independent_test, dplyr::select(pred$grid, -"cell_id"))
+    indep_val <- sapply(z$spp_names, function(sp) {
+      it_sp <- as.data.frame(it[it$species==sp,])
+      it_sp$presence <- factor(rep("presence", nrow(it_sp)))
+      levels(it_sp$presence) <- c("presence", "pseudoabsence")
+      independent_metrics <- sapply(m[[sp]], function(x) {
+          res <- validate_on_independent_data(x,
+                                              data_independent = it_sp,
+                                              obs_col_name = "presence")
+          return(res)
+      }, simplify = FALSE, USE.NAMES = TRUE)
+      res_mean <- do.call(rbind, independent_metrics) |>
+        colMeans()
+      res_sd <- apply(do.call(rbind, independent_metrics), 2, sd)
+      df <- data.frame(mean = res_mean, sd = res_sd)
+      return(df)
+    }, simplify = FALSE, USE.NAMES = TRUE)
+
+    m2$independent_validation <- indep_val
+  }
 
   models <- .models(m2)
 
@@ -346,8 +354,28 @@ mean_validation_metrics <- function(i) {
   return(res)
 }
 
+#' @rdname train_sdm
+#' @export
+add_models <- function(m1, m2) {
+  assert_class_cli(m1, "models", null.ok = TRUE)
+  assert_class_cli(m2, "models", null.ok = TRUE)
+  if(is.null(m1)) {return(m2)}
+  if(is.null(m2)) {return(m1)}
+  m <- list(validation = list(method = unique(c(m1$validation$method, m2$validation$method)),
+                              number = unique(c(m1$validation$number, m2$validation$number)),
+                              metrics = c(m1$validation$metrics, m2$validation$metrics)
+  ),
+  predictors = unique(c(m1$predictors, m2$predictors)),
+  algorithms = unique(c(m1$algorithms, m2$algorithms)),
+  models = c(m1$models, m2$models),
+  tuning = unique(c(m1$tuning, m2$tuning))
+  )
+  msum <- .models(m)
+  return(msum)
+}
+
 .models <- function(x) {
-  if ("independent_test" %in% names(x)) {
+  if ("independent_validation" %in% names(x)) {
     models <- structure(
       list(
         validation = list(

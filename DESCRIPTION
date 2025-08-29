@@ -1,7 +1,7 @@
 Type: Package
 Package: caretSDM
 Title: Build Species Distribution Modeling using 'caret'
-Version: 1.1.0.1
+Version: 1.1.4
 Authors@R: c(
     person("Dayani", "Bailly", role = "aut",
            comment = c(ORCID = "0000-0002-6954-9902")),
@@ -9,6 +9,8 @@ Authors@R: c(
            comment = c(ORCID = "0000-0003-4264-8449")),
     person("José", "Hilário Delconte Ferreira", role = "aut",
            comment = c(ORCID = "0000-0002-7116-2600")),
+    person("Marcos", "R. Lima", role = "aut",
+           comment = c(ORCID = "0000-0002-5901-0911")),
     person("Reginaldo", "Ré", role = "aut",
            comment = c(ORCID = "0000-0001-6452-3466")),
     person("Valéria", "Batista", role = "aut",
@@ -34,15 +36,18 @@ Config/testthat/edition: 3
 Depends: R (>= 4.2.0)
 URL: https://luizesser.github.io/caretSDM/
 Config/Needs/website: rmarkdown
+Config/roxyglobals/filename: generated-globals.R
+Config/roxyglobals/unique: FALSE
 NeedsCompilation: no
-Packaged: 2025-07-09 17:08:27 UTC; luizesser
+Packaged: 2025-08-29 12:43:38 UTC; luizesser
 Author: Dayani Bailly [aut] (ORCID: <https://orcid.org/0000-0002-6954-9902>),
   Edivando Couto [aut] (ORCID: <https://orcid.org/0000-0003-4264-8449>),
   José Hilário Delconte Ferreira [aut] (ORCID:
     <https://orcid.org/0000-0002-7116-2600>),
+  Marcos R. Lima [aut] (ORCID: <https://orcid.org/0000-0002-5901-0911>),
   Reginaldo Ré [aut] (ORCID: <https://orcid.org/0000-0001-6452-3466>),
   Valéria Batista [aut] (ORCID: <https://orcid.org/0000-0002-6574-7338>),
   Luíz Fernando Esser [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0003-2982-7223>)
 Repository: CRAN
-Date/Publication: 2025-07-10 13:30:02 UTC
+Date/Publication: 2025-08-29 13:50:02 UTC

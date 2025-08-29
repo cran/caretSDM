@@ -7,6 +7,7 @@
 \alias{get_models}
 \alias{get_validation_metrics}
 \alias{mean_validation_metrics}
+\alias{add_models}
 \title{Train SDM models}
 \usage{
 train_sdm(occ,
@@ -26,6 +27,8 @@ get_models(i)
 get_validation_metrics(i)
 
 mean_validation_metrics(i)
+
+add_models(m1, m2)
 }
 \arguments{
 \item{occ}{A \code{occurrences} or a \code{input_sdm} object.}
@@ -47,6 +50,10 @@ predictors names from \code{pred} will be used. Can also be a selection method (
 \item{...}{Additional arguments to be passed to \code{caret::train} function.}
 
 \item{i}{A \code{models} or a \code{input_sdm} object.}
+
+\item{m1}{A \code{models} object.}
+
+\item{m2}{A \code{models} object.}
 }
 \value{
 A \code{models} or a \code{input_sdm} object.
@@ -89,7 +96,7 @@ oc <- occurrences_sdm(occ, crs = 6933) |> join_area(sa)
 i <- input_sdm(oc, sa)
 
 # Pseudoabsence generation:
-i <- pseudoabsences(i, method="bioclim")
+i <- pseudoabsences(i, method = "random")
 
 # Custom trainControl:
 ctrl_sdm <- caret::trainControl(method = "repeatedcv",
@@ -101,7 +108,7 @@ ctrl_sdm <- caret::trainControl(method = "repeatedcv",
                                 savePredictions = "all")
 
 # Train models:
-i <- train_sdm(i, algo = c("naive_bayes"), ctrl=ctrl_sdm) |>
+i <- train_sdm(i, algo = c("naive_bayes"), ctrl = ctrl_sdm) |>
 suppressWarnings()
 
 }

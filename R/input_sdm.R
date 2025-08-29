@@ -3,6 +3,8 @@
 #' This function creates a new \code{input_sdm} object.
 #'
 #' @param ... Data to be used in SDMs. Can be a \code{occurrences} and/or a \code{sdm_area} object.
+#' @param i1 A \code{input_sdm} object.
+#' @param i2 A \code{input_sdm} object.
 #'
 #' @returns A \code{input_sdm} object containing:
 #'    \item{grid}{\code{sf} with POLYGON geometry representing the grid for the study area or
@@ -73,6 +75,25 @@ input_sdm <- function(...) {
   return(inp)
 }
 
+#' @rdname input_sdm
+#' @export
+add_input_sdm <- function(i1, i2) {
+  assert_class_cli(i1, "input_sdm")
+  assert_class_cli(i2, "input_sdm")
+
+  l <- list(
+    occurrences = add_occurrences(i1$occurrences, i2$occurrences),
+    predictors = add_sdm_area(i1$predictors, i2$predictors),
+    scenarios = add_sdm_area(i1$scenarios, i2$scenarios),
+    models = add_models(i1$models, i2$models),
+    predictions = add_predictions(i1$predictions, i2$predictions)
+  )
+  i <- structure(l,
+    class = "input_sdm"
+  )
+  return(i)
+}
+
 #' Print method for input_sdm
 #' @param x input_sdm object
 #' @param ... passed to other methods
@@ -102,6 +123,12 @@ print.input_sdm <- function(x, ...) {
     }
     if (!is.null(x$occurrences$data_cleaning)) {
       cat(cat("Data Cleaning                 : "), cat(x$occurrences$data_cleaning, sep = ", "), "\n")
+    }
+    if (!is.null(x$occurrences$esm)) {
+      cat(
+        "Ensemble of Small Models (ESM): TRUE\n",
+        "   Number of Records         :", x$occurrences$esm$n_records, "\n"
+      )
     }
   }
   if ("predictors" %in% names(x)) {
