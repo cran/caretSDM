@@ -17,7 +17,7 @@
 #' @param algo A \code{character} vector. Algorithms to be used. For a complete list see
 #' (https://topepo.github.io/caret/available-models.html) or in caretSDM::algorithms.
 #' @param ctrl A \code{trainControl} object to be used to build models. See
-#' \code{?caret::trainControl}.
+#' \code{?caret::trainControl} and details.
 #' @param variables_selected A \code{vector} of variables to be used as predictors. If \code{NULL},
 #' predictors names from \code{pred} will be used. Can also be a selection method (e.g. 'vif').
 #' @param ... Additional arguments to be passed to \code{caret::train} function.
@@ -33,6 +33,11 @@
 #' The object \code{\link{algorithms}} has a table comparing algorithms available. If the function
 #' detects that the necessary packages are not available it will ask for installation. This will
 #' happen just in the first time you use the algorithm.
+#' \code{caret::trainControl} holds multiple resources for validation and model tuning. Make sure
+#' to understand its parameters beforehand. As it is a key function in the modeling process, we also
+#' implemented spatial crossvalidation on it. You can set \code{methods} to be \code{cv_spatial} or
+#' \code{cv_cluster} and \code{train_sdm} will detect that and apply the method according to
+#' \code{blockCV} package.
 #'
 #' \code{get_tune_length} return the length used in grid-search for tunning.
 #'
@@ -85,12 +90,13 @@
 #' suppressWarnings()
 #'
 #' @importFrom sf st_centroid st_as_sf st_join st_intersection st_geometry_type
-#' @importFrom dplyr arrange select filter all_of bind_cols summarise group_by across everything
+#' @importFrom dplyr arrange select filter all_of bind_cols summarise group_by across everything mutate
 #' @importFrom raster extract
 #' @importFrom pROC roc
 #' @importFrom caret train trainControl
 #' @importFrom stars st_extract
 #' @importFrom utils combn
+#' @importFrom blockCV cv_spatial cv_cluster
 #'
 #' @global species
 #'
@@ -103,7 +109,7 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
   }
   assert_subset_cli(class(algo), c("list", "character"), empty.ok = FALSE)
 
-  if(!is.null(ctrl)){
+  if (!is.null(ctrl)) {
     assert_list_cli(ctrl, len=27)
     assert_names_cli(names(ctrl),
                      must.include = c("method", "number", "repeats", "search", "p", "initialWindow",
@@ -112,7 +118,12 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
                                       "summaryFunction", "selectionFunction", "preProcOptions",
                                       "sampling", "index", "indexOut", "indexFinal", "timingSamps",
                                       "predictionBounds", "seeds", "adaptive", "trim", "allowParallel"))
+  } else {
+    ctrl <- caret::trainControl(
+      method = "repeatedcv", number = 4, repeats = 1, classProbs = TRUE, returnResamp = "all",
+      summaryFunction = summary_sdm, savePredictions = "all", allowParallel = FALSE)
   }
+
   assert_subset_cli(variables_selected, c(get_predictor_names(pred), "vif", "pca"), empty.ok = TRUE)
 
   if (is_sdm_area(pred)) {
@@ -127,16 +138,10 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
     }
   }
 
-  if (is.null(ctrl)) {
-    ctrl <- caret::trainControl(
-      method = "repeatedcv", number = 4, repeats = 1, classProbs = TRUE, returnResamp = "all", # retornar folds
-      summaryFunction = summary_sdm, savePredictions = "all", allowParallel = FALSE
-    )
-  }
   algo2 <- algo
-  custom_algo <- c("label", "library", "loop", "type", "levels", "parameters", "grid", "fit",
-                   "predict", "prob", "predictors", "varImp", "tags")
-  if(is.list(algo) && all(names(algo) %in% custom_algo)) {
+  custom_algo <- c("library", "type", "parameters", "grid",
+                   "fit", "predict", "prob")
+  if(is.list(algo) && all(custom_algo %in% names(algo))) {
     algo2 <- deparse(substitute(algo))
   }
 
@@ -168,9 +173,42 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
 
     for (j in 1:length(z$pseudoabsences$data[[sp]])) {
       pa <- z$pseudoabsences$data[[sp]][[j]]
-      pa <- pa[, names(occ2)[match(names(pa), names(occ2))]]
+      pa <- sf::st_centroid(pa[, names(occ2)[match(names(pa), names(occ2))]]) |>
+        suppressWarnings()
       occ2 <- occ2[, names(occ2)[match(names(pa), names(occ2))]]
       x <- rbind(occ2, pa)
+
+      if ("cv_spatial" %in% ctrl$method) {
+        test <- x |> dplyr::mutate(presence = c(rep(1, nrow(occ2)), rep(0, nrow(pa))))
+        spatial_blocks <- blockCV::cv_spatial(
+          x = test,
+          column = "presence",
+          r = sdm_as_terra(occ, what = "predictors")[[-1]], # removes cell_id
+          k = ctrl$number,
+          biomod2 = FALSE,
+          progress = FALSE
+        )
+        ctrl$method <- "cv"
+        ctrl$number <- NA
+        ctrl$index <- lapply(spatial_blocks$folds_list, function(x) x[[1]])
+        ctrl$indexOut <- lapply(spatial_blocks$folds_list, function(x) x[[2]])
+      }
+      if ("cv_cluster" %in% ctrl$method) {
+        test <- x |> dplyr::mutate(presence = c(rep(1, nrow(occ2)), rep(0, nrow(pa))))
+        env_blocks <- blockCV::cv_cluster(
+          test,
+          column = "presence",
+          r = sdm_as_terra(occ, what = "predictors")[[-1]], # removes cell_id
+          k = ctrl$number,
+          biomod2 = FALSE,
+          report = FALSE
+        )
+        ctrl$method <- "cv"
+        ctrl$number <- NA
+        ctrl$index <- lapply(env_blocks$folds_list, function(x) x[[1]])
+        ctrl$indexOut <- lapply(env_blocks$folds_list, function(x) x[[2]])
+      }
+
       x <- dplyr::select(as.data.frame(x), dplyr::all_of(selected_vars))
       df <- as.factor(c(rep("presence", nrow(occ2)), rep("pseudoabsence", nrow(pa))))
 
@@ -182,11 +220,14 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
         if(is.character(algo)) {
           for (vars in 1:ncol(vars_comb)) {
             m1[[vars]] <- lapply(algo, function(a) {
+              if (a == "mahal.dist") { a <- .mahal.dist } else
+              if (a == "maxent") { a <- .maxent }
               caret::train(
                 df~.,
                 data = cbind(df,x[,vars_comb[,vars]]),
                 method = a,
-                trControl = ctrl
+                trControl = ctrl,
+                ...
               )
             })
           }
@@ -197,19 +238,22 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
               df~.,
               data = cbind(df,x),
               method = algo,
-              trControl = ctrl
+              trControl = ctrl,
+              ...
             ) |> list()
           }
           m <- unlist(m1, recursive = FALSE)
         }
       } else if(is.character(algo)) {
-        #cli::cli_progress_message("ESM not applied (records do not match condition)")
         m <- lapply(algo, function(a) {
+          if (a == "mahal.dist") { a <- .mahal.dist } else
+          if (a == "maxent") { a <- .maxent }
           caret::train(
             df~.,
             data = cbind(df,x),
             method = a,
-            trControl = ctrl
+            trControl = ctrl,
+            ...
           ) # lapply retorna diferentes valores de tuning (padronizar com seed?)
         })
       } else if (is.list(algo)) {
@@ -217,7 +261,8 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
           df~.,
           data = cbind(df,x),
           method = algo,
-          trControl = ctrl
+          trControl = ctrl,
+          ...
         ) |> list()
       }
       l[[paste0("m", j, ".")]] <- m
@@ -238,7 +283,16 @@ train_sdm <- function(occ, pred = NULL, algo, ctrl = NULL, variables_selected = 
   metrics <- sapply(z$spp_names, function(sp) {
     metrics <- lapply(m[[sp]], function(x) {
       if(x$method == "custom") {
-        x$method <- algo2
+        if("tags" %in% names(x$modelInfo)){
+          if(x$modelInfo$tags[1] == "maxent") {
+            x$method <- "maxent"
+          } else
+          if(x$modelInfo$tags[1] == "mahalanobis") {
+            x$method <- "mahal.dist"
+          }
+        } else {
+          x$method <- algo2
+        }
       }
       bt <- names(x$bestTune)
       res <- x$results[, !colnames(x$results) %in% bt]

@@ -15,7 +15,7 @@
 \alias{plot_niche}
 \title{S3 Methods for plot and mapview}
 \usage{
-plot_occurrences(i, spp_name = NULL, pa = TRUE)
+plot_occurrences(i, spp_name = NULL, pa = TRUE, pa_id = 1)
 
 plot_grid(i)
 
@@ -69,6 +69,9 @@ plot_niche(
 \item{spp_name}{A character with species to be plotted. If NULL, the first species is plotted.}
 
 \item{pa}{Boolean. Should pseudoabsences be plotted together? (not implemented yet.)}
+
+\item{pa_id}{The id of pseudoabsences to be plotted (only used when \code{pa = TRUE}). Possible
+values are numeric values from 1 to number of PA sets.}
 
 \item{variables_selected}{A character vector with names of variables to be plotted.}
 
