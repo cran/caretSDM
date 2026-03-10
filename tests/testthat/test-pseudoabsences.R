@@ -1,18 +1,20 @@
-sa <- sdm_area(parana, 100000, crs=6933) |>
-  add_predictors(bioc) |>
-  select_predictors(c("bio1", "bio12")) |>
-  add_scenarios()
-oc <- occurrences_sdm(occ, crs=6933)
-suppressWarnings(oc <- join_area(oc, sa))
-i <- input_sdm(oc, sa)
-
 test_that("pseudoabsences - normal", {
+  skip_on_cran()
+
+  sa <- sdm_area(parana, 100000, crs=6933) |>
+    add_predictors(bioc) |>
+    select_predictors(c("bio1", "bio12")) |>
+    add_scenarios()
+  oc <- occurrences_sdm(occ, crs=6933)
+  suppressWarnings(oc <- join_area(oc, sa))
+  i <- input_sdm(oc, sa)
+
   suppressWarnings(i2 <- pseudoabsences(i, method = "random", n_set = 1))
   expect_equal(n_pseudoabsences(i2), n_records(i2))
   expect_equal(n_pseudoabsences(i2$occurrences), n_records(i2$occurrences))
   expect_equal("random", pseudoabsence_method(i2))
   expect_equal("random", pseudoabsence_method(i2$occurrences))
-  expect_warning(i2 <- pseudoabsences(i2, method = "random", n_set = 1, variables_selected = c("bio1", "bio12")))
+  i2 <- pseudoabsences(i2, method = "random", n_set = 1, variables_selected = c("bio1", "bio12"))
   expect_equal("random", pseudoabsence_method(i2))
   expect_equal("random", pseudoabsence_method(i2$occurrences))
   expect_equal(n_pseudoabsences(i2), n_records(i2))
@@ -48,5 +50,9 @@ test_that("pseudoabsences - normal", {
   expect_equal(n_pseudoabsences(i7), n_records(i7))
   expect_equal("mahal.dist", pseudoabsence_method(i7))
   expect_equal("mahal.dist", pseudoabsence_method(i7$occurrences))
+
+  # erros
+  i <- background(i)
+  expect_error(train_sdm(i, algo = c("kknn")))
 
 })

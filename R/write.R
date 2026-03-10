@@ -35,6 +35,7 @@
 #' @importFrom cli cli_inform
 #' @importFrom dplyr select
 #' @importFrom utils write.csv
+#' @import checkCLI
 #'
 #' @global cell_id.x species sp sc geometry
 #'
@@ -60,7 +61,6 @@ write_ensembles <- function(x, path = NULL, ext = ".tif", centroid = FALSE) {
     for (sc in scen) {
       v <- y[["ensembles"]][[sp, sc]]
       if (is.data.frame(v)) {
-
         result <- merge(grd, v, by = "cell_id")
         if (!dir.exists(paste0(path, "/", sp))) {
           dir.create(paste0(path, "/", sp), recursive = TRUE)

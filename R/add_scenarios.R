@@ -73,6 +73,7 @@
 #' @importFrom tidyr drop_na
 #' @importFrom cli cli_progress_along cli_abort cli_warn
 #' @importFrom stats aggregate
+#' @import checkCLI
 #'
 #' @export
 add_scenarios <- function(sa, scen = NULL, scenarios_names = NULL, pred_as_scen = TRUE,
@@ -192,9 +193,9 @@ add_scenarios.stars <- function(sa, scen = NULL, scenarios_names = NULL, pred_as
     }
     scen <- scen[, , , variables_selected]
 
-    bbox1 <- st_as_sfc(st_bbox(scen))
-    bbox2 <- st_as_sfc(st_bbox(st_transform(stationary_grd, crs = st_crs(scen))))
-    suppressMessages(intersects <- st_intersects(bbox1,
+    bbox1 <- sf::st_as_sfc(sf::st_bbox(scen))
+    bbox2 <- sf::st_as_sfc(sf::st_bbox(sf::st_transform(stationary_grd, crs = sf::st_crs(scen))))
+    suppressMessages(intersects <- sf::st_intersects(bbox1,
                                                  bbox2,
                                                  sparse = FALSE)[1,1])
 
@@ -239,9 +240,9 @@ add_scenarios.stars <- function(sa, scen = NULL, scenarios_names = NULL, pred_as
     stationary_grd <- sa$grid |> dplyr::select(all_of(c("cell_id", stationary)))
     variables_selected <- pres_names[!pres_names %in% stationary]
     scen <- scen[, , , variables_selected]
-    bbox1 <- st_as_sfc(st_bbox(scen))
-    bbox2 <- st_as_sfc(st_bbox(st_transform(stationary_grd, crs = st_crs(scen))))
-    suppressMessages(intersects <- st_intersects(bbox1,
+    bbox1 <- sf::st_as_sfc(sf::st_bbox(scen))
+    bbox2 <- sf::st_as_sfc(sf::st_bbox(sf::st_transform(stationary_grd, crs = sf::st_crs(scen))))
+    suppressMessages(intersects <- sf::st_intersects(bbox1,
                                                     bbox2,
                                                     sparse = FALSE)[1,1])
     if(!intersects) {
