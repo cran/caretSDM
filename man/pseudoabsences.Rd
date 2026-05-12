@@ -15,7 +15,8 @@ pseudoabsences(occ,
                variables_selected = NULL,
                th = 0,
                size = 1,
-               crs = 4326)
+               crs = 4326,
+               mcp = FALSE)
 
 n_pseudoabsences(i)
 
@@ -30,7 +31,7 @@ pseudoabsence_data(i)
 \code{pred} will be retrieved from \code{occ}.}
 
 \item{method}{Method to create pseudoabsences. One of: "random", "bioclim", "mahal.dist" or
-"buffer_sdm".}
+"buffer_sdm". User can also provide a custom function (see details).}
 
 \item{n_set}{\code{numeric}. Number of datasets of pseudoabsence to create.}
 
@@ -49,6 +50,9 @@ buffer radius).}
 
 \item{crs}{\code{numeric} Indicates which EPSG it the size in.}
 
+\item{mcp}{\code{boolean}. Should the buffer be applied in each record (FALSE) or in a minimum
+convex polygon/convex hull (TRUE)? Standard is \code{FALSE}.}
+
 \item{i}{A \code{input_sdm} object.}
 }
 \value{
@@ -59,13 +63,18 @@ This function obtains pseudoabsences given a set of predictors.
 }
 \details{
 \code{pseudoabsences} is used in the SDM workflow to obtain pseudoabsences, a step necessary for
-most of the algorithms to run. We implemented three methods so far: \code{"random"}, which is
-self-explanatory, \code{"bioclim"}, \code{"mahal.dist"} and \code{"buffer_sdm"}. The two last are
+most of the algorithms to run. We implemented four methods: \code{"random"}, which is
+self-explanatory, \code{"buffer_sdm"}, \code{"mahal.dist"} and \code{"bioclim"}. The two last are
 built with the idea that pseudoabsences should be environmentally different from presences. Thus,
-we implemented two presence-only methods to infer the distribution of the species. \code{"bioclim"} uses an
-envelope approach (bioclimatic envelope), while \code{"mahal.dist"} uses a distance approach
-(mahalanobis distance). \code{th} parameter enters here as a threshold to binarize those results.
-Pseudoabsences are retrieved outside the projected distribution of the species.
+we implemented two presence-only methods to infer the distribution of the species. \code{"bioclim"}
+uses an envelope approach (bioclimatic envelope), while \code{"mahal.dist"} uses a distance
+approach (mahalanobis distance). \code{th} parameter enters here as a threshold to binarize those
+results. Pseudoabsences are retrieved outside the projected distribution of the species. If user
+provides a custom function, it must have the arguments \code{env_sf} and \code{occ_sf}, which will
+consist of two \code{"sf"}s. The first has the predictor values for the whole study area, while
+the second has the presence records for the species. The function must return a vector with
+cell_ids of the pseudoabsences, which is the first column of both objects. For \code{buffer_sdm},
+user needs to specifiy the size of the buffer compatible with buffer CRS.
 
 \code{n_pseudoabsences} returns the number of pseudoabsences obtained per species.
 
@@ -85,17 +94,37 @@ sa <- add_predictors(sa, bioc) |> select_predictors(c("bio1", "bio4", "bio12"))
 sa <- add_scenarios(sa)
 
 # Create occurrences:
-oc <- occurrences_sdm(occ, crs = 6933) |> join_area(sa)
+oc <- occurrences_sdm(occ[1:50,], crs = 6933)
 
 # Create input_sdm:
 i <- input_sdm(oc, sa)
 
 # Pseudoabsence generation:
-i <- pseudoabsences(i, method="random")
+i0 <- pseudoabsences(i, method="random")
+
+# Custom method example:
+buffer_pa_custom <- function(env_sf, occ_sf, buffer_dist = 3) {
+  # Create buffer around occurrence points
+  buffer <- sf::st_buffer(occ_sf, dist = buffer_dist)
+
+  # Union buffers into a single geometry
+  buffer_union <- sf::st_union(buffer)
+
+  # Identify cells outside the buffer
+  outside_buffer <- sf::st_difference(env_sf, buffer_union)[,1]
+
+  # Randomly extract cell_ids outside the buffer
+  pa_ids_sample <- sample(outside_buffer$cell_id, nrow(occ_sf))
+
+  return(pa_ids_sample)
+}
+
+i1 <- pseudoabsences(i, method=buffer_pa_custom)
 
 }
 \seealso{
-\code{link{input_sdm} \link{background} \link{occurrences_sdm}}
+\code{link{input_sdm} \link{background} \link{occurrences_sdm} \link{get_occurrences}
+\link{get_predictors} }
 }
 \author{
 Luíz Fernando Esser (luizesser@gmail.com)

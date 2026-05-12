@@ -11,13 +11,14 @@
 #'                variables_selected = NULL,
 #'                th = 0,
 #'                size = 1,
-#'                crs = 4326)
+#'                crs = 4326,
+#'                mcp = FALSE)
 #'
 #' @param occ A \code{occurrences_sdm} or \code{input_sdm} object.
 #' @param pred A \code{sdm_area} object. If \code{NULL} and \code{occ} is a \code{input_sdm},
 #' \code{pred} will be retrieved from \code{occ}.
 #' @param method Method to create pseudoabsences. One of: "random", "bioclim", "mahal.dist" or
-#' "buffer_sdm".
+#' "buffer_sdm". User can also provide a custom function (see details).
 #' @param n_set \code{numeric}. Number of datasets of pseudoabsence to create.
 #' @param n_pa \code{numeric}. Number of pseudoabsences to be generated in each dataset created.
 #' If \code{NULL} then the function prevents imbalance by using the same number of presence records
@@ -29,6 +30,8 @@
 #' @param size \code{numeric} The distance between the record and the margin of the buffer (i.e.
 #' buffer radius).
 #' @param crs \code{numeric} Indicates which EPSG it the size in.
+#' @param mcp \code{boolean}. Should the buffer be applied in each record (FALSE) or in a minimum
+#' convex polygon/convex hull (TRUE)? Standard is \code{FALSE}.
 #'
 #' @param i A \code{input_sdm} object.
 #'
@@ -36,13 +39,18 @@
 #'
 #' @details
 #' \code{pseudoabsences} is used in the SDM workflow to obtain pseudoabsences, a step necessary for
-#' most of the algorithms to run. We implemented three methods so far: \code{"random"}, which is
-#' self-explanatory, \code{"bioclim"}, \code{"mahal.dist"} and \code{"buffer_sdm"}. The two last are
+#' most of the algorithms to run. We implemented four methods: \code{"random"}, which is
+#' self-explanatory, \code{"buffer_sdm"}, \code{"mahal.dist"} and \code{"bioclim"}. The two last are
 #' built with the idea that pseudoabsences should be environmentally different from presences. Thus,
-#' we implemented two presence-only methods to infer the distribution of the species. \code{"bioclim"} uses an
-#' envelope approach (bioclimatic envelope), while \code{"mahal.dist"} uses a distance approach
-#' (mahalanobis distance). \code{th} parameter enters here as a threshold to binarize those results.
-#' Pseudoabsences are retrieved outside the projected distribution of the species.
+#' we implemented two presence-only methods to infer the distribution of the species. \code{"bioclim"}
+#' uses an envelope approach (bioclimatic envelope), while \code{"mahal.dist"} uses a distance
+#' approach (mahalanobis distance). \code{th} parameter enters here as a threshold to binarize those
+#' results. Pseudoabsences are retrieved outside the projected distribution of the species. If user
+#' provides a custom function, it must have the arguments \code{env_sf} and \code{occ_sf}, which will
+#' consist of two \code{"sf"}s. The first has the predictor values for the whole study area, while
+#' the second has the presence records for the species. The function must return a vector with
+#' cell_ids of the pseudoabsences, which is the first column of both objects. For \code{buffer_sdm},
+#' user needs to specifiy the size of the buffer compatible with buffer CRS.
 #'
 #' \code{n_pseudoabsences} returns the number of pseudoabsences obtained per species.
 #'
@@ -51,7 +59,8 @@
 #' \code{pseudoabsence_data} returns a \code{list} of species names. Each species name will have a
 #' \code{list}s with pseudoabsences data from class \code{sf}.
 #'
-#' @seealso \code{link{input_sdm} \link{background} \link{occurrences_sdm}}
+#' @seealso \code{link{input_sdm} \link{background} \link{occurrences_sdm} \link{get_occurrences}
+#' \link{get_predictors} }
 #'
 #' @author Luíz Fernando Esser (luizesser@gmail.com)
 #' https://luizfesser.wordpress.com
@@ -67,13 +76,32 @@
 #' sa <- add_scenarios(sa)
 #'
 #' # Create occurrences:
-#' oc <- occurrences_sdm(occ, crs = 6933) |> join_area(sa)
+#' oc <- occurrences_sdm(occ[1:50,], crs = 6933)
 #'
 #' # Create input_sdm:
 #' i <- input_sdm(oc, sa)
 #'
 #' # Pseudoabsence generation:
-#' i <- pseudoabsences(i, method="random")
+#' i0 <- pseudoabsences(i, method="random")
+#'
+#' # Custom method example:
+#' buffer_pa_custom <- function(env_sf, occ_sf, buffer_dist = 3) {
+#'   # Create buffer around occurrence points
+#'   buffer <- sf::st_buffer(occ_sf, dist = buffer_dist)
+#'
+#'   # Union buffers into a single geometry
+#'   buffer_union <- sf::st_union(buffer)
+#'
+#'   # Identify cells outside the buffer
+#'   outside_buffer <- sf::st_difference(env_sf, buffer_union)[,1]
+#'
+#'   # Randomly extract cell_ids outside the buffer
+#'   pa_ids_sample <- sample(outside_buffer$cell_id, nrow(occ_sf))
+#'
+#'   return(pa_ids_sample)
+#' }
+#'
+#' i1 <- pseudoabsences(i, method=buffer_pa_custom)
 #'
 #' @importFrom sf st_as_sf st_crs st_transform st_intersection st_geometry_type st_difference
 #' @importFrom dplyr select all_of filter
@@ -85,14 +113,20 @@
 #' @import checkCLI
 #'
 #' @export
-pseudoabsences <- function(occ, pred = NULL, method = "random", n_set = 10, n_pa = NULL, variables_selected = NULL, th = 0, size = 1, crs = 4326) {
+pseudoabsences <- function(occ, pred = NULL, method = "random", n_set = 10, n_pa = NULL, variables_selected = NULL, th = 0, size = 1, crs = 4326, mcp = FALSE) {
   assert_class_cli(occ, "input_sdm")
   if (is_input_sdm(occ)) {
     y <- occ$occurrences
     pred <- occ$predictors
   }
   assert_class_cli(pred, "sdm_area")
-  assert_choice_cli(method, c("random", "bioclim", "mahal.dist", "buffer_sdm"))
+  assert_cli(
+    check_class_cli(method, "character"),
+    check_class_cli(method, "function")
+  )
+  if (is.character(method)) {
+    assert_choice_cli(method, c("random", "bioclim", "mahal.dist", "buffer_sdm"))
+  }
   assert_int_cli(n_set)
   assert_int_cli(n_pa, null.ok = TRUE)
   if(length(n_pa)!=1){assert_numeric_cli(n_pa, len = length(species_names(y)), null.ok=T)}
@@ -109,6 +143,7 @@ pseudoabsences <- function(occ, pred = NULL, method = "random", n_set = 10, n_pa
                     "i" = "Trying to set n_pa names to: {species_names(y)}"))
     if(length(n_pa) == length(species_names(y))) {
       names(n_pa) <- species_names(y)
+      n_pa <- as.table(n_pa)
     } else {
       if(length(n_pa)==1) {
         cli::cli_warn(c("Length of {.var n_pa} is 1.",
@@ -140,112 +175,137 @@ pseudoabsences <- function(occ, pred = NULL, method = "random", n_set = 10, n_pa
       dplyr::select(dplyr::all_of(c("cell_id", selected_vars)))
   }
 
-  if (method == "random") {
+  if (is.function(method)) {
+    assert_function_cli(method, args = c("env_sf", "occ_sf"))
+    method_name <- deparse(substitute(method))
     l <- sapply(y$spp_names, function(sp) {
-      l <- list()
-      for (j in 1:n_set) {
-        if (n_pa[sp] < nrow(df)) {
-          samp <- sample(df$cell_id, n_pa[sp])
-        } else {
-          samp <- sample(df$cell_id, n_pa[sp], replace = TRUE)
+      l <- vector("list", n_set)
+      for (j in seq_len(n_set)) {
+        method_output <- method(
+          env_sf = df,
+          occ_sf = y$occurrences[y$occurrences$species == sp, ]
+        )
+        if (j == 1) {
+          assert_class_cli(method_output, "integer")
+          assert_vector_cli(method_output)
         }
-        l[[j]] <- df[df$cell_id %in% samp, ]
+        # Keep valid cell_ids
+        method_output <- intersect(unique(method_output), df$cell_id)
+        l[[j]] <- df[df$cell_id %in% method_output, ]
       }
       return(l)
     }, simplify = FALSE, USE.NAMES = TRUE)
-    pa <- .pseudoabsences(y, l, method, n_set, n_pa)
-  }
-  if (method == "bioclim") {
-    if (is_input_sdm(occ)) {
-      l <- sapply(y$spp_names, function(sp) {
-        if(sf::st_crs(y$occurrences) != sf::st_crs(df)){
-           sf_occ <- sf::st_transform(y$occurrences, crs = sf::st_crs(df))
-        } else {
-          sf_occ <- y$occurrences
-        }
-        if(unique(sf::st_geometry_type(df)) == "LINESTRING") {
-          occ2 <- df[df$cell_id %in% sf_occ$cell_id,]
-        } else {
-          suppressWarnings(occ2 <- sf::st_intersection(sf_occ, df))
-        }
-        model <- dismo::bioclim(x = dplyr::select(as.data.frame(occ2), dplyr::all_of(selected_vars)))
-        p <- dismo::predict(model, as.data.frame(df))
-        p[p[] > th] <- NA
-        p <- data.frame(cell_id = df$cell_id, pred = p)
-        p <- p[!is.na(p$pred), ]
-        l <- list()
-        if (nrow(p) == 0) {
-          cli::cli_abort(c("bioclim envelope for ", sp, " covered all the study area. Change th argument or change the method."))
-        } else {
-          for (j in 1:n_set) {
-            if (n_pa[sp] < length(p$cell_id)) {
-              samp <- sample(p$cell_id, n_pa[sp])
-            } else {
-              samp <- sample(p$cell_id, n_pa[sp], replace = TRUE)
-            }
-            l[[j]] <- df[df$cell_id %in% samp, ]
-          }
-        }
 
-        return(l)
-      }, simplify = FALSE, USE.NAMES = TRUE)
-    }
-    pa <- .pseudoabsences(y, l, method, n_set, n_pa)
-  }
-  if (method == "mahal.dist") {
-    if (is_input_sdm(occ)) {
-      l <- sapply(y$spp_names, function(sp) {
-        occ2 <- df[df$cell_id %in% y$occurrences[y$occurrences$species == sp, ]$cell_id, ]
-        model <- caret::train(dplyr::select(as.data.frame(occ2), dplyr::all_of(selected_vars)),
-                     rep("presence", nrow(occ2)),
-                     method = .mahal.dist) |>
-          suppressWarnings()
+    pa <- .pseudoabsences(y, l, method = method_name, n_set, n_pa)
 
-        p1 <- predict(model, as.data.frame(df)) # classification in Presence and NA
-        p <- data.frame(cell_id = df$cell_id, pred = p1)
-        p <- p[is.na(p1), ] # Maintain only areas with NA, removing areas with presence.
+  } else {
+    if (method == "random") {
+      l <- sapply(y$spp_names, function(sp) {
         l <- list()
-        if (nrow(p) == 0) {
-          cli::cli_abort(c("Mahalanobis envelope for ", sp, " covered all the study area."))
-        } else {
-          for (j in 1:n_set) {
-            if (n_pa[sp] < length(p$cell_id)) {
-              samp <- sample(p$cell_id, n_pa[sp])
-            } else {
-              samp <- sample(p$cell_id, n_pa[sp], replace = TRUE)
-            }
-            l[[j]] <- df[df$cell_id %in% samp, ]
-          }
-        }
-        return(l)
-      }, simplify = FALSE, USE.NAMES = TRUE)
-    }
-    pa <- .pseudoabsences(y, l, method, n_set, n_pa)
-  }
-  if (method == "buffer_sdm") {
-    l <- sapply(y$spp_names, function(sp) {
-      buf <- buffer_sdm(y, size, crs)
-      if(!sf::st_crs(buf) == sf::st_crs(df)) {
-        buf <- sf::st_transform(buf, sf::st_crs(df))
-      }
-      p <- sf::st_difference(df, buf) |>
-        suppressWarnings()
-      l <- list()
-      if (nrow(p) == 0) {
-        cli::cli_abort(c("Buffer for ", sp, " covered all the study area."))
-      } else {
         for (j in 1:n_set) {
-          if (n_pa[sp] < length(p$cell_id)) {
-            samp <- sample(p$cell_id, n_pa[sp])
+          if (n_pa[sp] < nrow(df)) {
+            samp <- sample(df$cell_id, n_pa[sp])
           } else {
-            samp <- sample(p$cell_id, n_pa[sp], replace = TRUE)
+            samp <- sample(df$cell_id, n_pa[sp], replace = TRUE)
           }
           l[[j]] <- df[df$cell_id %in% samp, ]
         }
+        return(l)
+      }, simplify = FALSE, USE.NAMES = TRUE)
+      pa <- .pseudoabsences(y, l, method, n_set, n_pa)
+    }
+    if (method == "bioclim") {
+      if (is_input_sdm(occ)) {
+        l <- sapply(y$spp_names, function(sp) {
+          if(sf::st_crs(y$occurrences) != sf::st_crs(df)){
+             sf_occ <- sf::st_transform(y$occurrences, crs = sf::st_crs(df))
+          } else {
+            sf_occ <- y$occurrences
+          }
+          if(unique(sf::st_geometry_type(df)) == "LINESTRING") {
+            occ2 <- df[df$cell_id %in% sf_occ$cell_id,]
+          } else {
+            suppressWarnings(occ2 <- sf::st_intersection(sf_occ, df))
+          }
+          model <- dismo::bioclim(x = dplyr::select(as.data.frame(occ2), dplyr::all_of(selected_vars)))
+          p <- dismo::predict(model, as.data.frame(df))
+          p[p[] > th] <- NA
+          p <- data.frame(cell_id = df$cell_id, pred = p)
+          p <- p[!is.na(p$pred), ]
+          l <- list()
+          if (nrow(p) == 0) {
+            cli::cli_abort(c("bioclim envelope for ", sp, " covered all the study area. Change th argument or change the method."))
+          } else {
+            for (j in 1:n_set) {
+              if (n_pa[sp] < length(p$cell_id)) {
+                samp <- sample(p$cell_id, n_pa[sp])
+              } else {
+                samp <- sample(p$cell_id, n_pa[sp], replace = TRUE)
+              }
+              l[[j]] <- df[df$cell_id %in% samp, ]
+            }
+          }
+
+          return(l)
+        }, simplify = FALSE, USE.NAMES = TRUE)
       }
-      return(l)
-    }, simplify = FALSE, USE.NAMES = TRUE)
-    pa <- .pseudoabsences(y, l, method, n_set, n_pa)
+      pa <- .pseudoabsences(y, l, method, n_set, n_pa)
+    }
+    if (method == "mahal.dist") {
+      if (is_input_sdm(occ)) {
+        l <- sapply(y$spp_names, function(sp) {
+          occ2 <- df[df$cell_id %in% y$occurrences[y$occurrences$species == sp, ]$cell_id, ]
+          model <- caret::train(dplyr::select(as.data.frame(occ2), dplyr::all_of(selected_vars)),
+                       rep("presence", nrow(occ2)),
+                       method = .mahal.dist) |>
+            suppressWarnings()
+
+          p1 <- predict(model, as.data.frame(df)) # classification in Presence and NA
+          p <- data.frame(cell_id = df$cell_id, pred = p1)
+          p <- p[is.na(p1), ] # Maintain only areas with NA, removing areas with presence.
+          l <- list()
+          if (nrow(p) == 0) {
+            cli::cli_abort(c("Mahalanobis envelope for ", sp, " covered all the study area."))
+          } else {
+            for (j in 1:n_set) {
+              if (n_pa[sp] < length(p$cell_id)) {
+                samp <- sample(p$cell_id, n_pa[sp])
+              } else {
+                samp <- sample(p$cell_id, n_pa[sp], replace = TRUE)
+              }
+              l[[j]] <- df[df$cell_id %in% samp, ]
+            }
+          }
+          return(l)
+        }, simplify = FALSE, USE.NAMES = TRUE)
+      }
+      pa <- .pseudoabsences(y, l, method, n_set, n_pa)
+    }
+    if (method == "buffer_sdm") {
+      l <- sapply(y$spp_names, function(sp) {
+        buf <- buffer_sdm(y, size, crs, mcp)
+        if(!sf::st_crs(buf) == sf::st_crs(df)) {
+          buf <- sf::st_transform(buf, sf::st_crs(df))
+        }
+        p <- sf::st_difference(df, buf) |>
+          suppressWarnings()
+        l <- list()
+        if (nrow(p) == 0) {
+          cli::cli_abort(c("Buffer for ", sp, " covered all the study area."))
+        } else {
+          for (j in 1:n_set) {
+            if (n_pa[sp] < length(p$cell_id)) {
+              samp <- sample(p$cell_id, n_pa[sp])
+            } else {
+              samp <- sample(p$cell_id, n_pa[sp], replace = TRUE)
+            }
+            l[[j]] <- df[df$cell_id %in% samp, ]
+          }
+        }
+        return(l)
+      }, simplify = FALSE, USE.NAMES = TRUE)
+      pa <- .pseudoabsences(y, l, method, n_set, n_pa)
+    }
   }
 
   if (is_input_sdm(occ)) {

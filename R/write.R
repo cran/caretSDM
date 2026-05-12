@@ -32,7 +32,7 @@
 #' @importFrom sf st_join st_write st_coordinates st_centroid
 #' @importFrom stars write_stars st_rasterize
 #' @importFrom fs path_file path_dir path
-#' @importFrom cli cli_inform
+#' @importFrom cli cli_inform cli_abort
 #' @importFrom dplyr select
 #' @importFrom utils write.csv
 #' @import checkCLI
@@ -42,16 +42,19 @@
 #' @export
 write_ensembles <- function(x, path = NULL, ext = ".tif", centroid = FALSE) {
   if (is_input_sdm(x)) {
-    y <- x$predictions
+    y <- x$ensembles
   } else {
-    y <- x
+    cli::cli_abort(c(
+      "{.var x} must be an input_sdm object",
+      "x" = "You've supplied a {.cls {class(x)}} object."
+    ))
   }
   assert_character_cli(path, null.ok = FALSE)
   ext_sf <- c(".bna", ".csv", ".e00", ".gdb", ".geojson", ".gml", ".gmt", ".gpkg", ".gps", ".gtm", ".gxt", ".jml",
               ".map", ".mdb", ".nc", ".ods", ".osm", ".pbf", ".shp", ".sqlite", ".vdv", ".xls", ".xlsx")
-  scen <- colnames(y$ensembles)
-  spp <- rownames(y$ensembles)
-  grd <- y$grid
+  scen <- colnames(y$data)
+  spp <- rownames(y$data)
+  grd <- x$predictions$grid
   if(centroid){
     suppressWarnings(cent <- sf::st_coordinates(sf::st_centroid(grd)))
     colnames(cent) <- c("x_centroid", "y_centroid")
@@ -59,7 +62,7 @@ write_ensembles <- function(x, path = NULL, ext = ".tif", centroid = FALSE) {
   }
   for (sp in spp) {
     for (sc in scen) {
-      v <- y[["ensembles"]][[sp, sc]]
+      v <- y[["data"]][[sp, sc]]
       if (is.data.frame(v)) {
         result <- merge(grd, v, by = "cell_id")
         if (!dir.exists(paste0(path, "/", sp))) {
@@ -256,6 +259,41 @@ write_pseudoabsences <- function(x, path = NULL, ext = ".csv", centroid = FALSE)
         stars::write_stars(result, paste0(path, "/", sp, "/pseudoabsences_", n, ext))
       } else if (ext %in% ext_sf) {
         sf::st_write(result, paste0(path, "/", sp, "/pseudoabsences_", n, ext))
+      }
+    }
+  }
+}
+
+#' @rdname write_ensembles
+#' @export
+write_background <- function(x, path = NULL, ext = ".csv", centroid = FALSE) {
+  assert_character_cli(path, null.ok = FALSE)
+  assert_directory_cli(dirname(path))
+  assert_logical_cli(centroid, len = 1)
+
+  y <- background_data(x)
+  ext_sf <- c(".bna", ".csv", ".e00", ".gdb", ".geojson", ".gml", ".gmt", ".gpkg", ".gps", ".gtm", ".gxt", ".jml",
+              ".map", ".mdb", ".nc", ".ods", ".osm", ".pbf", ".shp", ".sqlite", ".vdv", ".xls", ".xlsx")
+  spp <- species_names(x)
+  grd <- get_sdm_area(x)
+  if(centroid){
+    suppressWarnings(cent <- sf::st_coordinates(sf::st_centroid(grd)))
+    colnames(cent) <- c("x_centroid", "y_centroid")
+    grd <- cbind(grd, cent)
+  }
+  for (sp in spp) {
+    v <- y[[sp]]
+    for (n in 1:length(v)) {
+      v2 <- v[[n]] |> as.data.frame() |> dplyr::select(-geometry)
+      result <- merge(grd, as.data.frame(v2), by = "cell_id")
+      if (!dir.exists(paste0(path, "/", sp))) {
+        dir.create(paste0(path, "/", sp), recursive = TRUE)
+      }
+      if (ext == ".tif" | ext == ".asc") {
+        result <- merge(stars::st_rasterize(result))
+        stars::write_stars(result, paste0(path, "/", sp, "/background_", n, ext))
+      } else if (ext %in% ext_sf) {
+        sf::st_write(result, paste0(path, "/", sp, "/background_", n, ext))
       }
     }
   }

@@ -102,7 +102,8 @@ add_input_sdm <- function(i1, i2) {
     predictors = add_sdm_area(i1$predictors, i2$predictors),
     scenarios = add_sdm_area(i1$scenarios, i2$scenarios),
     models = add_models(i1$models, i2$models),
-    predictions = add_predictions(i1$predictions, i2$predictions)
+    predictions = add_predictions(i1$predictions, i2$predictions),
+    predictions = add_ensembles(i1$ensembles, i2$ensembles)
   )
   i <- structure(l,
     class = "input_sdm"
@@ -134,8 +135,9 @@ print.input_sdm <- function(x, ...) {
     if (!is.null(x$occurrences$background)) {
       cat(
         "Background methods            :\n",
+        "   Method to obtain BGs.     :", x$occurrences$background$method, "\n",
         "   Number of Background sets :", x$occurrences$background$n_set, "\n",
-        "   Number of Bg in each set  :", as.numeric(x$occurrences$background$n), "\n",
+        "   Number of Bg in each set  :", as.numeric(x$occurrences$background$n_bg), "\n",
         "   Background proportion     :", as.numeric(x$occurrences$background$proportion), "\n"
       )
     }
@@ -156,7 +158,7 @@ print.input_sdm <- function(x, ...) {
     if (is_sdm_area(x$predictors)) {
       cat("--------  Predictors  ---------\n")
       cat("Number of Predictors          :", ncol(x$predictors$grid)-2, "\n")
-      cat(cat("Predictors Names              : "), cat(predictors(x$predictors), sep = ", "), "\n")
+      cat(cat("Predictors Names              : "), cat(get_predictor_names(x$predictors), sep = ", "), "\n")
       if (!is.null(x$predictors$bbox)) {
         cat("Extent                        :", sf::st_bbox(x$predictors$grid), "(xmin, xmax, ymin, ymax)\n")
       }
@@ -166,18 +168,27 @@ print.input_sdm <- function(x, ...) {
       if (!is.null(x$predictors$resolution)) {
         cat("Resolution                    :", paste0("(", x$predictors$cell_size, ", ", x$cell_size, ")"), "(x, y)\n")
       }
-      if (!is.null(x$predictors$variable_selection$vif)) {
-        cat(
-          cat("Area (VIF)                    : "), cat(x$predictors$variable_selection$vif$area), cat("\n"),
-          cat("Threshold                     : "), cat(x$predictors$variable_selection$vif$threshold), cat("\n"),
-          cat("Selected Variables (VIF)      : "), cat(x$predictors$variable_selection$vif$selected_variables, sep = ", "), "\n"
-        )
-      }
-      if (!is.null(x$predictors$variable_selection$pca)) {
-        cat(
-          cat("PCA-transformed variables     : DONE \n"),
-          cat("Cummulative proportion (",x$predictors$variable_selection$pca$cumulative_proportion_th,") : "), cat(x$predictors$variable_selection$pca$selected_variables, sep = ", "), "\n"
-        )
+      if("variable_selection" %in% names(x$predictors)) {
+        cat("Variable Selection            :", names(x$predictors$variable_selection), "\n")
+        if (!names(x$predictors$variable_selection) %in% c("vifstep", "vifcor", "pca")) {
+          cat(
+            cat("Selected Variables            : "), cat(x$predictors$variable_selection[[1]]$selected_variables, sep = ", "), "\n"
+          )
+
+        }
+        if (names(x$predictors$variable_selection) %in% c("vifstep", "vifcor")) {
+          cat(
+            cat("Threshold                     : "), cat(x$predictors$variable_selection$vif$threshold), cat("\n"),
+            cat("Selected Variables            : "), cat(x$predictors$variable_selection$vif$selected_variables, sep = ", "), "\n"
+          )
+        }
+        if (!is.null(x$predictors$variable_selection$pca)) {
+          cat(
+            cat("PCA-transformed variables     : DONE \n"),
+            cat("Cummulative proportion (",x$predictors$variable_selection$pca$cumulative_proportion_th,") : "), cat(x$predictors$variable_selection$pca$selected_variables, sep = ", "), "\n"
+          )
+        }
+
       }
     }
   }
@@ -219,14 +230,16 @@ print.input_sdm <- function(x, ...) {
   if ("predictions" %in% names(x)) {
     cat("--------  Predictions  --------\n")
     cat(
-      "Ensembles                     :\n",
-      "   Scenarios                 :", colnames(x$predictions$ensembles), "\n",
-      "   Methods                   :", colnames(x$predictions$ensembles[1, 1][[1]])[-1], "\n"
-    )
-    cat(
       "Thresholds                    :\n",
       "   Method                    :", x$predictions$thresholds$method, "\n",
       "   Criteria                  :", x$predictions$thresholds$criteria, "\n"
+    )
+  }
+  if ("ensembles" %in% names(x)) {
+    cat("---------  Ensembles  ---------\n")
+    cat(
+      "Ensembles                     :\n",
+      "   Methods                   :", x$ensembles$method, "\n"
     )
   }
   invisible(x)

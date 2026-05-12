@@ -28,13 +28,10 @@
           Metrics                   :
       $`Araucaria angustifolia`
                algo       ROC      Sens       Spec      ROCSD
-      1        kknn 0.5828637 0.9944179 0.03194444 0.09463642
-      2 naive_bayes 0.8525695 0.9737374 0.41180556 0.04199922
+      1        kknn 0.5832341 0.9936242 0.03194444 0.09516020
+      2 naive_bayes 0.8595126 0.9737298 0.37986111 0.03705704
       
       --------  Predictions  --------
-      Ensembles                     :
-          Scenarios                 : current 
-          Methods                   : mean_occ_prob wmean_AUC committee_avg 
       Thresholds                    :
           Method                    : threshold 
           Criteria                  : 0.5 
@@ -47,27 +44,25 @@
                caretSDM        
       .........................
       Class             : Predictions
-      Ensembles         :
-               Methods  : mean_occ_prob wmean_AUC committee_avg 
       Thresholds        :
                Method   : threshold 
                Criteria : 0.5 
                Metrics  :
       $`Araucaria angustifolia`
-                  algo       ROC      Sens       Spec       ROCSD       SensSD
-      m1.2        kknn 0.6094911 0.9904306 0.03125000 0.124182775 1.353314e-02
-      m2.2        kknn 0.5287031 0.9928230 0.06458333 0.003601790 1.014986e-02
-      m3.2        kknn 0.6103968 1.0000000 0.00000000 0.156124688 1.683588e-02
-      m1.1 naive_bayes 0.8583184 0.9665414 0.45625000 0.026537650 2.711462e-02
-      m2.1 naive_bayes 0.8398397 0.9809068 0.38958333 0.001625186 8.055443e-05
-      m3.1 naive_bayes 0.8595505 0.9737640 0.38958333 0.097834831 1.003708e-02
-                SpecSD
-      m1.2 0.044194174
-      m2.2 0.002946278
-      m3.2 0.000000000
-      m1.1 0.203293200
-      m2.1 0.150260191
-      m3.1 0.109012295
+                             algo       ROC      Sens       Spec       ROCSD
+      kknn_pa1               kknn 0.6094911 0.9904306 0.03125000 0.124182775
+      kknn_pa2               kknn 0.5287031 0.9928230 0.06458333 0.003601790
+      kknn_pa3               kknn 0.6115079 0.9976190 0.00000000 0.157696036
+      naive_bayes_pa1 naive_bayes 0.8569157 0.9665414 0.42500000 0.020945159
+      naive_bayes_pa2 naive_bayes 0.8426247 0.9809068 0.35833333 0.006854678
+      naive_bayes_pa3 naive_bayes 0.8789975 0.9737412 0.35625000 0.083371284
+                            SensSD      SpecSD
+      kknn_pa1        1.353314e-02 0.044194174
+      kknn_pa2        1.014986e-02 0.002946278
+      kknn_pa3        1.683588e-02 0.000000000
+      naive_bayes_pa1 2.711462e-02 0.247487373
+      naive_bayes_pa2 8.055443e-05 0.153206469
+      naive_bayes_pa3 3.479951e-03 0.129636243
       
 
 # predict_sdm - th 0
@@ -100,13 +95,10 @@
           Metrics                   :
       $`Araucaria angustifolia`
                algo       ROC      Sens       Spec      ROCSD
-      1        kknn 0.5828637 0.9944179 0.03194444 0.09463642
-      2 naive_bayes 0.8525695 0.9737374 0.41180556 0.04199922
+      1        kknn 0.5832341 0.9936242 0.03194444 0.09516020
+      2 naive_bayes 0.8595126 0.9737298 0.37986111 0.03705704
       
       --------  Predictions  --------
-      Ensembles                     :
-          Scenarios                 : current 
-          Methods                   : mean_occ_prob wmean_AUC committee_avg 
       Thresholds                    :
           Method                    : threshold 
           Criteria                  : 0 
@@ -119,27 +111,25 @@
                caretSDM        
       .........................
       Class             : Predictions
-      Ensembles         :
-               Methods  : mean_occ_prob wmean_AUC committee_avg 
       Thresholds        :
                Method   : threshold 
                Criteria : 0 
                Metrics  :
       $`Araucaria angustifolia`
-                  algo       ROC      Sens       Spec       ROCSD       SensSD
-      m1.2        kknn 0.6094911 0.9904306 0.03125000 0.124182775 1.353314e-02
-      m2.2        kknn 0.5287031 0.9928230 0.06458333 0.003601790 1.014986e-02
-      m3.2        kknn 0.6103968 1.0000000 0.00000000 0.156124688 1.683588e-02
-      m1.1 naive_bayes 0.8583184 0.9665414 0.45625000 0.026537650 2.711462e-02
-      m2.1 naive_bayes 0.8398397 0.9809068 0.38958333 0.001625186 8.055443e-05
-      m3.1 naive_bayes 0.8595505 0.9737640 0.38958333 0.097834831 1.003708e-02
-                SpecSD
-      m1.2 0.044194174
-      m2.2 0.002946278
-      m3.2 0.000000000
-      m1.1 0.203293200
-      m2.1 0.150260191
-      m3.1 0.109012295
+                             algo       ROC      Sens       Spec       ROCSD
+      kknn_pa1               kknn 0.6094911 0.9904306 0.03125000 0.124182775
+      kknn_pa2               kknn 0.5287031 0.9928230 0.06458333 0.003601790
+      kknn_pa3               kknn 0.6115079 0.9976190 0.00000000 0.157696036
+      naive_bayes_pa1 naive_bayes 0.8569157 0.9665414 0.42500000 0.020945159
+      naive_bayes_pa2 naive_bayes 0.8426247 0.9809068 0.35833333 0.006854678
+      naive_bayes_pa3 naive_bayes 0.8789975 0.9737412 0.35625000 0.083371284
+                            SensSD      SpecSD
+      kknn_pa1        1.353314e-02 0.044194174
+      kknn_pa2        1.014986e-02 0.002946278
+      kknn_pa3        1.683588e-02 0.000000000
+      naive_bayes_pa1 2.711462e-02 0.247487373
+      naive_bayes_pa2 8.055443e-05 0.153206469
+      naive_bayes_pa3 3.479951e-03 0.129636243
       
 
 # predict_sdm - th function
@@ -172,16 +162,13 @@
           Metrics                   :
       $`Araucaria angustifolia`
                algo       ROC      Sens       Spec      ROCSD
-      1        kknn 0.5828637 0.9944179 0.03194444 0.09463642
-      2 naive_bayes 0.8525695 0.9737374 0.41180556 0.04199922
+      1        kknn 0.5832341 0.9936242 0.03194444 0.09516020
+      2 naive_bayes 0.8595126 0.9737298 0.37986111 0.03705704
       
       --------  Predictions  --------
-      Ensembles                     :
-          Scenarios                 : current 
-          Methods                   : mean_occ_prob wmean_AUC committee_avg 
       Thresholds                    :
-          Method                    : function (x, ...)  UseMethod("mean") 
-          Criteria                  : function (x, ...)  UseMethod("mean") 
+          Method                    : mean 
+          Criteria                  : 0.7213733 
 
 ---
 
@@ -191,21 +178,19 @@
                caretSDM        
       .........................
       Class             : Predictions
-      Ensembles         :
-               Methods  : mean_occ_prob wmean_AUC committee_avg 
       Thresholds        :
-               Method   : function (x, ...)  UseMethod("mean") 
-               Criteria : function (x, ...)  UseMethod("mean") 
+               Method   : mean 
+               Criteria : 0.7213733 
                Metrics  :
       $`Araucaria angustifolia`
-                  algo       ROC      Sens      Spec       ROCSD       SensSD
-      m1.1 naive_bayes 0.8583184 0.9665414 0.4562500 0.026537650 2.711462e-02
-      m2.1 naive_bayes 0.8398397 0.9809068 0.3895833 0.001625186 8.055443e-05
-      m3.1 naive_bayes 0.8595505 0.9737640 0.3895833 0.097834831 1.003708e-02
-              SpecSD
-      m1.1 0.2032932
-      m2.1 0.1502602
-      m3.1 0.1090123
+                             algo       ROC      Sens      Spec       ROCSD
+      naive_bayes_pa1 naive_bayes 0.8569157 0.9665414 0.4250000 0.020945159
+      naive_bayes_pa2 naive_bayes 0.8426247 0.9809068 0.3583333 0.006854678
+      naive_bayes_pa3 naive_bayes 0.8789975 0.9737412 0.3562500 0.083371284
+                            SensSD    SpecSD
+      naive_bayes_pa1 2.711462e-02 0.2474874
+      naive_bayes_pa2 8.055443e-05 0.1532065
+      naive_bayes_pa3 3.479951e-03 0.1296362
       
 
 # add_input_sdm
@@ -276,74 +261,86 @@
                Number          : 1 
                Metrics         :
       $`Salminus brasiliensis`
-                  algo       ROC        TSS Sensitivity Specificity Pos Pred Value
-      m1.1 naive_bayes 0.5666667 0.07222222         0.9       0.222          0.708
-      m2.1 naive_bayes 0.6269841 0.44444444         1.0       0.444          0.737
-           Neg Pred Value Precision Recall    F1 Prevalence Detection Rate
-      m1.1            0.4     0.708    0.9 0.783      0.690          0.621
-      m2.1            1.0     0.737    1.0 0.848      0.609          0.609
-           Detection Prevalence Balanced Accuracy Accuracy Kappa AccuracyLower
-      m1.1                0.897             0.536    0.655 0.082         0.457
-      m2.1                0.913             0.722    0.783 0.493         0.563
-           AccuracyUpper AccuracyNull AccuracyPValue McnemarPValue Positive Negative
-      m1.1         0.821        0.690          0.732         0.343       20        9
-      m2.1         0.925        0.609          0.264         0.074       14        9
-           True Positive False Positive True Negative False Negative   CBI pAUC
-      m1.1            18              3             2              8 0.462  NaN
-      m2.1            14              0             4              7 0.400  NaN
-           Omission_10pct ROCSD TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
-      m1.1          0.100    NA    NA            NA            NA               NA
-      m2.1          0.143    NA    NA            NA            NA               NA
-           Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD Detection RateSD
-      m1.1               NA          NA       NA   NA           NA               NA
-      m2.1               NA          NA       NA   NA           NA               NA
-           Detection PrevalenceSD Balanced AccuracySD AccuracySD KappaSD
-      m1.1                     NA                  NA         NA      NA
-      m2.1                     NA                  NA         NA      NA
-           AccuracyLowerSD AccuracyUpperSD AccuracyNullSD AccuracyPValueSD
-      m1.1              NA              NA             NA               NA
-      m2.1              NA              NA             NA               NA
-           McnemarPValueSD PositiveSD NegativeSD True PositiveSD False PositiveSD
-      m1.1              NA         NA         NA              NA               NA
-      m2.1              NA         NA         NA              NA               NA
-           True NegativeSD False NegativeSD CBISD pAUCSD Omission_10pctSD
-      m1.1              NA               NA    NA     NA               NA
-      m2.1              NA               NA    NA     NA               NA
+                             algo       ROC        TSS Sensitivity Specificity
+      naive_bayes_pa1 naive_bayes 0.6194444 0.01111111         0.9       0.111
+      naive_bayes_pa2 naive_bayes 0.7023810 0.44444444         1.0       0.444
+                      Pos Pred Value Neg Pred Value Precision Recall    F1 Prevalence
+      naive_bayes_pa1          0.692          0.333     0.692    0.9 0.783      0.690
+      naive_bayes_pa2          0.737          1.000     0.737    1.0 0.848      0.609
+                      Detection Rate Detection Prevalence Balanced Accuracy Accuracy
+      naive_bayes_pa1          0.621                0.897             0.506    0.655
+      naive_bayes_pa2          0.609                0.913             0.722    0.783
+                      Kappa AccuracyLower AccuracyUpper AccuracyNull AccuracyPValue
+      naive_bayes_pa1 0.014         0.457         0.821        0.690          0.732
+      naive_bayes_pa2 0.493         0.563         0.925        0.609          0.264
+                      McnemarPValue Positive Negative True Positive False Positive
+      naive_bayes_pa1         0.114       20        9            18              2
+      naive_bayes_pa2         0.074       14        9            14              0
+                      True Negative False Negative   CBI pAUC Omission_10pct ROCSD
+      naive_bayes_pa1             1              8 0.300  NaN          0.100    NA
+      naive_bayes_pa2             4              7 0.899  NaN          0.071    NA
+                      TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
+      naive_bayes_pa1    NA            NA            NA               NA
+      naive_bayes_pa2    NA            NA            NA               NA
+                      Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD
+      naive_bayes_pa1               NA          NA       NA   NA           NA
+      naive_bayes_pa2               NA          NA       NA   NA           NA
+                      Detection RateSD Detection PrevalenceSD Balanced AccuracySD
+      naive_bayes_pa1               NA                     NA                  NA
+      naive_bayes_pa2               NA                     NA                  NA
+                      AccuracySD KappaSD AccuracyLowerSD AccuracyUpperSD
+      naive_bayes_pa1         NA      NA              NA              NA
+      naive_bayes_pa2         NA      NA              NA              NA
+                      AccuracyNullSD AccuracyPValueSD McnemarPValueSD PositiveSD
+      naive_bayes_pa1             NA               NA              NA         NA
+      naive_bayes_pa2             NA               NA              NA         NA
+                      NegativeSD True PositiveSD False PositiveSD True NegativeSD
+      naive_bayes_pa1         NA              NA               NA              NA
+      naive_bayes_pa2         NA              NA               NA              NA
+                      False NegativeSD CBISD pAUCSD Omission_10pctSD
+      naive_bayes_pa1               NA    NA     NA               NA
+      naive_bayes_pa2               NA    NA     NA               NA
       
       $`Araucaria angustifolia`
-                  algo       ROC       TSS Sensitivity Specificity Pos Pred Value
-      m1.1 naive_bayes 0.9004566 0.3264840       0.993       0.333          0.935
-      m2.1 naive_bayes 0.8329032 0.4548387       0.955       0.500          0.967
-           Neg Pred Value Precision Recall    F1 Prevalence Detection Rate
-      m1.1          0.833     0.935  0.993 0.963      0.907          0.901
-      m2.1          0.417     0.967  0.955 0.961      0.939          0.897
-           Detection Prevalence Balanced Accuracy Accuracy Kappa AccuracyLower
-      m1.1                0.963             0.663    0.932 0.447         0.881
-      m2.1                0.927             0.727    0.927 0.416         0.876
-           AccuracyUpper AccuracyNull AccuracyPValue McnemarPValue Positive Negative
-      m1.1         0.965        0.907          0.669         0.211      146       15
-      m2.1         0.962        0.939          1.000         0.773      155       10
-           True Positive False Positive True Negative False Negative   CBI pAUC
-      m1.1           145              5             5             11 0.890  NaN
-      m2.1           148             23             5              5 0.781  NaN
-           Omission_10pct ROCSD TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
-      m1.1          0.075    NA    NA            NA            NA               NA
-      m2.1          0.090    NA    NA            NA            NA               NA
-           Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD Detection RateSD
-      m1.1               NA          NA       NA   NA           NA               NA
-      m2.1               NA          NA       NA   NA           NA               NA
-           Detection PrevalenceSD Balanced AccuracySD AccuracySD KappaSD
-      m1.1                     NA                  NA         NA      NA
-      m2.1                     NA                  NA         NA      NA
-           AccuracyLowerSD AccuracyUpperSD AccuracyNullSD AccuracyPValueSD
-      m1.1              NA              NA             NA               NA
-      m2.1              NA              NA             NA               NA
-           McnemarPValueSD PositiveSD NegativeSD True PositiveSD False PositiveSD
-      m1.1              NA         NA         NA              NA               NA
-      m2.1              NA         NA         NA              NA               NA
-           True NegativeSD False NegativeSD CBISD pAUCSD Omission_10pctSD
-      m1.1              NA               NA    NA     NA               NA
-      m2.1              NA               NA    NA     NA               NA
+                             algo       ROC       TSS Sensitivity Specificity
+      naive_bayes_pa1 naive_bayes 0.9132420 0.3264840       0.993       0.333
+      naive_bayes_pa2 naive_bayes 0.8387097 0.4548387       0.955       0.500
+                      Pos Pred Value Neg Pred Value Precision Recall    F1 Prevalence
+      naive_bayes_pa1          0.935          0.833     0.935  0.993 0.963      0.907
+      naive_bayes_pa2          0.967          0.417     0.967  0.955 0.961      0.939
+                      Detection Rate Detection Prevalence Balanced Accuracy Accuracy
+      naive_bayes_pa1          0.901                0.963             0.663    0.932
+      naive_bayes_pa2          0.897                0.927             0.727    0.927
+                      Kappa AccuracyLower AccuracyUpper AccuracyNull AccuracyPValue
+      naive_bayes_pa1 0.447         0.881         0.965        0.907          0.669
+      naive_bayes_pa2 0.416         0.876         0.962        0.939          1.000
+                      McnemarPValue Positive Negative True Positive False Positive
+      naive_bayes_pa1         0.211      146       15           145              5
+      naive_bayes_pa2         0.773      155       10           148             23
+                      True Negative False Negative   CBI pAUC Omission_10pct ROCSD
+      naive_bayes_pa1             5             11 0.862  NaN          0.075    NA
+      naive_bayes_pa2             5              5 0.383  NaN          0.090    NA
+                      TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
+      naive_bayes_pa1    NA            NA            NA               NA
+      naive_bayes_pa2    NA            NA            NA               NA
+                      Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD
+      naive_bayes_pa1               NA          NA       NA   NA           NA
+      naive_bayes_pa2               NA          NA       NA   NA           NA
+                      Detection RateSD Detection PrevalenceSD Balanced AccuracySD
+      naive_bayes_pa1               NA                     NA                  NA
+      naive_bayes_pa2               NA                     NA                  NA
+                      AccuracySD KappaSD AccuracyLowerSD AccuracyUpperSD
+      naive_bayes_pa1         NA      NA              NA              NA
+      naive_bayes_pa2         NA      NA              NA              NA
+                      AccuracyNullSD AccuracyPValueSD McnemarPValueSD PositiveSD
+      naive_bayes_pa1             NA               NA              NA         NA
+      naive_bayes_pa2             NA               NA              NA         NA
+                      NegativeSD True PositiveSD False PositiveSD True NegativeSD
+      naive_bayes_pa1         NA              NA               NA              NA
+      naive_bayes_pa2         NA              NA               NA              NA
+                      False NegativeSD CBISD pAUCSD Omission_10pctSD
+      naive_bayes_pa1               NA    NA     NA               NA
+      naive_bayes_pa2               NA    NA     NA               NA
       
 
 ---
@@ -354,81 +351,91 @@
                caretSDM        
       .........................
       Class             : Predictions
-      Ensembles         :
-               Methods  : mean_occ_prob wmean_AUC committee_avg 
       Thresholds        :
                Method   : threshold 
                Criteria : 0.5 0.6 
                Metrics  :
       $`Salminus brasiliensis`
-                  algo       ROC        TSS Sensitivity Specificity Pos Pred Value
-      m1.1 naive_bayes 0.5666667 0.07222222         0.9       0.222          0.708
-      m2.1 naive_bayes 0.6269841 0.44444444         1.0       0.444          0.737
-           Neg Pred Value Precision Recall    F1 Prevalence Detection Rate
-      m1.1            0.4     0.708    0.9 0.783      0.690          0.621
-      m2.1            1.0     0.737    1.0 0.848      0.609          0.609
-           Detection Prevalence Balanced Accuracy Accuracy Kappa AccuracyLower
-      m1.1                0.897             0.536    0.655 0.082         0.457
-      m2.1                0.913             0.722    0.783 0.493         0.563
-           AccuracyUpper AccuracyNull AccuracyPValue McnemarPValue Positive Negative
-      m1.1         0.821        0.690          0.732         0.343       20        9
-      m2.1         0.925        0.609          0.264         0.074       14        9
-           True Positive False Positive True Negative False Negative   CBI pAUC
-      m1.1            18              3             2              8 0.462  NaN
-      m2.1            14              0             4              7 0.400  NaN
-           Omission_10pct ROCSD TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
-      m1.1          0.100    NA    NA            NA            NA               NA
-      m2.1          0.143    NA    NA            NA            NA               NA
-           Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD Detection RateSD
-      m1.1               NA          NA       NA   NA           NA               NA
-      m2.1               NA          NA       NA   NA           NA               NA
-           Detection PrevalenceSD Balanced AccuracySD AccuracySD KappaSD
-      m1.1                     NA                  NA         NA      NA
-      m2.1                     NA                  NA         NA      NA
-           AccuracyLowerSD AccuracyUpperSD AccuracyNullSD AccuracyPValueSD
-      m1.1              NA              NA             NA               NA
-      m2.1              NA              NA             NA               NA
-           McnemarPValueSD PositiveSD NegativeSD True PositiveSD False PositiveSD
-      m1.1              NA         NA         NA              NA               NA
-      m2.1              NA         NA         NA              NA               NA
-           True NegativeSD False NegativeSD CBISD pAUCSD Omission_10pctSD
-      m1.1              NA               NA    NA     NA               NA
-      m2.1              NA               NA    NA     NA               NA
+                             algo       ROC        TSS Sensitivity Specificity
+      naive_bayes_pa1 naive_bayes 0.6194444 0.01111111         0.9       0.111
+      naive_bayes_pa2 naive_bayes 0.7023810 0.44444444         1.0       0.444
+                      Pos Pred Value Neg Pred Value Precision Recall    F1 Prevalence
+      naive_bayes_pa1          0.692          0.333     0.692    0.9 0.783      0.690
+      naive_bayes_pa2          0.737          1.000     0.737    1.0 0.848      0.609
+                      Detection Rate Detection Prevalence Balanced Accuracy Accuracy
+      naive_bayes_pa1          0.621                0.897             0.506    0.655
+      naive_bayes_pa2          0.609                0.913             0.722    0.783
+                      Kappa AccuracyLower AccuracyUpper AccuracyNull AccuracyPValue
+      naive_bayes_pa1 0.014         0.457         0.821        0.690          0.732
+      naive_bayes_pa2 0.493         0.563         0.925        0.609          0.264
+                      McnemarPValue Positive Negative True Positive False Positive
+      naive_bayes_pa1         0.114       20        9            18              2
+      naive_bayes_pa2         0.074       14        9            14              0
+                      True Negative False Negative   CBI pAUC Omission_10pct ROCSD
+      naive_bayes_pa1             1              8 0.300  NaN          0.100    NA
+      naive_bayes_pa2             4              7 0.899  NaN          0.071    NA
+                      TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
+      naive_bayes_pa1    NA            NA            NA               NA
+      naive_bayes_pa2    NA            NA            NA               NA
+                      Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD
+      naive_bayes_pa1               NA          NA       NA   NA           NA
+      naive_bayes_pa2               NA          NA       NA   NA           NA
+                      Detection RateSD Detection PrevalenceSD Balanced AccuracySD
+      naive_bayes_pa1               NA                     NA                  NA
+      naive_bayes_pa2               NA                     NA                  NA
+                      AccuracySD KappaSD AccuracyLowerSD AccuracyUpperSD
+      naive_bayes_pa1         NA      NA              NA              NA
+      naive_bayes_pa2         NA      NA              NA              NA
+                      AccuracyNullSD AccuracyPValueSD McnemarPValueSD PositiveSD
+      naive_bayes_pa1             NA               NA              NA         NA
+      naive_bayes_pa2             NA               NA              NA         NA
+                      NegativeSD True PositiveSD False PositiveSD True NegativeSD
+      naive_bayes_pa1         NA              NA               NA              NA
+      naive_bayes_pa2         NA              NA               NA              NA
+                      False NegativeSD CBISD pAUCSD Omission_10pctSD
+      naive_bayes_pa1               NA    NA     NA               NA
+      naive_bayes_pa2               NA    NA     NA               NA
       
       $`Araucaria angustifolia`
-                  algo       ROC       TSS Sensitivity Specificity Pos Pred Value
-      m1.1 naive_bayes 0.9004566 0.3264840       0.993       0.333          0.935
-      m2.1 naive_bayes 0.8329032 0.4548387       0.955       0.500          0.967
-           Neg Pred Value Precision Recall    F1 Prevalence Detection Rate
-      m1.1          0.833     0.935  0.993 0.963      0.907          0.901
-      m2.1          0.417     0.967  0.955 0.961      0.939          0.897
-           Detection Prevalence Balanced Accuracy Accuracy Kappa AccuracyLower
-      m1.1                0.963             0.663    0.932 0.447         0.881
-      m2.1                0.927             0.727    0.927 0.416         0.876
-           AccuracyUpper AccuracyNull AccuracyPValue McnemarPValue Positive Negative
-      m1.1         0.965        0.907          0.669         0.211      146       15
-      m2.1         0.962        0.939          1.000         0.773      155       10
-           True Positive False Positive True Negative False Negative   CBI pAUC
-      m1.1           145              5             5             11 0.890  NaN
-      m2.1           148             23             5              5 0.781  NaN
-           Omission_10pct ROCSD TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
-      m1.1          0.075    NA    NA            NA            NA               NA
-      m2.1          0.090    NA    NA            NA            NA               NA
-           Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD Detection RateSD
-      m1.1               NA          NA       NA   NA           NA               NA
-      m2.1               NA          NA       NA   NA           NA               NA
-           Detection PrevalenceSD Balanced AccuracySD AccuracySD KappaSD
-      m1.1                     NA                  NA         NA      NA
-      m2.1                     NA                  NA         NA      NA
-           AccuracyLowerSD AccuracyUpperSD AccuracyNullSD AccuracyPValueSD
-      m1.1              NA              NA             NA               NA
-      m2.1              NA              NA             NA               NA
-           McnemarPValueSD PositiveSD NegativeSD True PositiveSD False PositiveSD
-      m1.1              NA         NA         NA              NA               NA
-      m2.1              NA         NA         NA              NA               NA
-           True NegativeSD False NegativeSD CBISD pAUCSD Omission_10pctSD
-      m1.1              NA               NA    NA     NA               NA
-      m2.1              NA               NA    NA     NA               NA
+                             algo       ROC       TSS Sensitivity Specificity
+      naive_bayes_pa1 naive_bayes 0.9132420 0.3264840       0.993       0.333
+      naive_bayes_pa2 naive_bayes 0.8387097 0.4548387       0.955       0.500
+                      Pos Pred Value Neg Pred Value Precision Recall    F1 Prevalence
+      naive_bayes_pa1          0.935          0.833     0.935  0.993 0.963      0.907
+      naive_bayes_pa2          0.967          0.417     0.967  0.955 0.961      0.939
+                      Detection Rate Detection Prevalence Balanced Accuracy Accuracy
+      naive_bayes_pa1          0.901                0.963             0.663    0.932
+      naive_bayes_pa2          0.897                0.927             0.727    0.927
+                      Kappa AccuracyLower AccuracyUpper AccuracyNull AccuracyPValue
+      naive_bayes_pa1 0.447         0.881         0.965        0.907          0.669
+      naive_bayes_pa2 0.416         0.876         0.962        0.939          1.000
+                      McnemarPValue Positive Negative True Positive False Positive
+      naive_bayes_pa1         0.211      146       15           145              5
+      naive_bayes_pa2         0.773      155       10           148             23
+                      True Negative False Negative   CBI pAUC Omission_10pct ROCSD
+      naive_bayes_pa1             5             11 0.862  NaN          0.075    NA
+      naive_bayes_pa2             5              5 0.383  NaN          0.090    NA
+                      TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
+      naive_bayes_pa1    NA            NA            NA               NA
+      naive_bayes_pa2    NA            NA            NA               NA
+                      Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD
+      naive_bayes_pa1               NA          NA       NA   NA           NA
+      naive_bayes_pa2               NA          NA       NA   NA           NA
+                      Detection RateSD Detection PrevalenceSD Balanced AccuracySD
+      naive_bayes_pa1               NA                     NA                  NA
+      naive_bayes_pa2               NA                     NA                  NA
+                      AccuracySD KappaSD AccuracyLowerSD AccuracyUpperSD
+      naive_bayes_pa1         NA      NA              NA              NA
+      naive_bayes_pa2         NA      NA              NA              NA
+                      AccuracyNullSD AccuracyPValueSD McnemarPValueSD PositiveSD
+      naive_bayes_pa1             NA               NA              NA         NA
+      naive_bayes_pa2             NA               NA              NA         NA
+                      NegativeSD True PositiveSD False PositiveSD True NegativeSD
+      naive_bayes_pa1         NA              NA               NA              NA
+      naive_bayes_pa2         NA              NA               NA              NA
+                      False NegativeSD CBISD pAUCSD Omission_10pctSD
+      naive_bayes_pa1               NA    NA     NA               NA
+      naive_bayes_pa2               NA    NA     NA               NA
       
 
 ---
@@ -439,46 +446,50 @@
                caretSDM        
       .........................
       Class             : Predictions
-      Ensembles         :
-               Methods  : mean_occ_prob wmean_AUC committee_avg 
       Thresholds        :
                Method   : threshold 
                Criteria : 0.5 
                Metrics  :
       $`Salminus brasiliensis`
-                  algo       ROC        TSS Sensitivity Specificity Pos Pred Value
-      m1.1 naive_bayes 0.5666667 0.07222222         0.9       0.222          0.708
-      m2.1 naive_bayes 0.6269841 0.44444444         1.0       0.444          0.737
-           Neg Pred Value Precision Recall    F1 Prevalence Detection Rate
-      m1.1            0.4     0.708    0.9 0.783      0.690          0.621
-      m2.1            1.0     0.737    1.0 0.848      0.609          0.609
-           Detection Prevalence Balanced Accuracy Accuracy Kappa AccuracyLower
-      m1.1                0.897             0.536    0.655 0.082         0.457
-      m2.1                0.913             0.722    0.783 0.493         0.563
-           AccuracyUpper AccuracyNull AccuracyPValue McnemarPValue Positive Negative
-      m1.1         0.821        0.690          0.732         0.343       20        9
-      m2.1         0.925        0.609          0.264         0.074       14        9
-           True Positive False Positive True Negative False Negative   CBI pAUC
-      m1.1            18              3             2              8 0.462  NaN
-      m2.1            14              0             4              7 0.400  NaN
-           Omission_10pct ROCSD TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
-      m1.1          0.100    NA    NA            NA            NA               NA
-      m2.1          0.143    NA    NA            NA            NA               NA
-           Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD Detection RateSD
-      m1.1               NA          NA       NA   NA           NA               NA
-      m2.1               NA          NA       NA   NA           NA               NA
-           Detection PrevalenceSD Balanced AccuracySD AccuracySD KappaSD
-      m1.1                     NA                  NA         NA      NA
-      m2.1                     NA                  NA         NA      NA
-           AccuracyLowerSD AccuracyUpperSD AccuracyNullSD AccuracyPValueSD
-      m1.1              NA              NA             NA               NA
-      m2.1              NA              NA             NA               NA
-           McnemarPValueSD PositiveSD NegativeSD True PositiveSD False PositiveSD
-      m1.1              NA         NA         NA              NA               NA
-      m2.1              NA         NA         NA              NA               NA
-           True NegativeSD False NegativeSD CBISD pAUCSD Omission_10pctSD
-      m1.1              NA               NA    NA     NA               NA
-      m2.1              NA               NA    NA     NA               NA
+                             algo       ROC        TSS Sensitivity Specificity
+      naive_bayes_pa1 naive_bayes 0.6194444 0.01111111         0.9       0.111
+      naive_bayes_pa2 naive_bayes 0.7023810 0.44444444         1.0       0.444
+                      Pos Pred Value Neg Pred Value Precision Recall    F1 Prevalence
+      naive_bayes_pa1          0.692          0.333     0.692    0.9 0.783      0.690
+      naive_bayes_pa2          0.737          1.000     0.737    1.0 0.848      0.609
+                      Detection Rate Detection Prevalence Balanced Accuracy Accuracy
+      naive_bayes_pa1          0.621                0.897             0.506    0.655
+      naive_bayes_pa2          0.609                0.913             0.722    0.783
+                      Kappa AccuracyLower AccuracyUpper AccuracyNull AccuracyPValue
+      naive_bayes_pa1 0.014         0.457         0.821        0.690          0.732
+      naive_bayes_pa2 0.493         0.563         0.925        0.609          0.264
+                      McnemarPValue Positive Negative True Positive False Positive
+      naive_bayes_pa1         0.114       20        9            18              2
+      naive_bayes_pa2         0.074       14        9            14              0
+                      True Negative False Negative   CBI pAUC Omission_10pct ROCSD
+      naive_bayes_pa1             1              8 0.300  NaN          0.100    NA
+      naive_bayes_pa2             4              7 0.899  NaN          0.071    NA
+                      TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
+      naive_bayes_pa1    NA            NA            NA               NA
+      naive_bayes_pa2    NA            NA            NA               NA
+                      Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD
+      naive_bayes_pa1               NA          NA       NA   NA           NA
+      naive_bayes_pa2               NA          NA       NA   NA           NA
+                      Detection RateSD Detection PrevalenceSD Balanced AccuracySD
+      naive_bayes_pa1               NA                     NA                  NA
+      naive_bayes_pa2               NA                     NA                  NA
+                      AccuracySD KappaSD AccuracyLowerSD AccuracyUpperSD
+      naive_bayes_pa1         NA      NA              NA              NA
+      naive_bayes_pa2         NA      NA              NA              NA
+                      AccuracyNullSD AccuracyPValueSD McnemarPValueSD PositiveSD
+      naive_bayes_pa1             NA               NA              NA         NA
+      naive_bayes_pa2             NA               NA              NA         NA
+                      NegativeSD True PositiveSD False PositiveSD True NegativeSD
+      naive_bayes_pa1         NA              NA               NA              NA
+      naive_bayes_pa2         NA              NA               NA              NA
+                      False NegativeSD CBISD pAUCSD Omission_10pctSD
+      naive_bayes_pa1               NA    NA     NA               NA
+      naive_bayes_pa2               NA    NA     NA               NA
       
 
 ---
@@ -489,45 +500,49 @@
                caretSDM        
       .........................
       Class             : Predictions
-      Ensembles         :
-               Methods  : mean_occ_prob wmean_AUC committee_avg 
       Thresholds        :
                Method   : threshold 
                Criteria : 0.6 
                Metrics  :
       $`Araucaria angustifolia`
-                  algo       ROC       TSS Sensitivity Specificity Pos Pred Value
-      m1.1 naive_bayes 0.9004566 0.3264840       0.993       0.333          0.935
-      m2.1 naive_bayes 0.8329032 0.4548387       0.955       0.500          0.967
-           Neg Pred Value Precision Recall    F1 Prevalence Detection Rate
-      m1.1          0.833     0.935  0.993 0.963      0.907          0.901
-      m2.1          0.417     0.967  0.955 0.961      0.939          0.897
-           Detection Prevalence Balanced Accuracy Accuracy Kappa AccuracyLower
-      m1.1                0.963             0.663    0.932 0.447         0.881
-      m2.1                0.927             0.727    0.927 0.416         0.876
-           AccuracyUpper AccuracyNull AccuracyPValue McnemarPValue Positive Negative
-      m1.1         0.965        0.907          0.669         0.211      146       15
-      m2.1         0.962        0.939          1.000         0.773      155       10
-           True Positive False Positive True Negative False Negative   CBI pAUC
-      m1.1           145              5             5             11 0.890  NaN
-      m2.1           148             23             5              5 0.781  NaN
-           Omission_10pct ROCSD TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
-      m1.1          0.075    NA    NA            NA            NA               NA
-      m2.1          0.090    NA    NA            NA            NA               NA
-           Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD Detection RateSD
-      m1.1               NA          NA       NA   NA           NA               NA
-      m2.1               NA          NA       NA   NA           NA               NA
-           Detection PrevalenceSD Balanced AccuracySD AccuracySD KappaSD
-      m1.1                     NA                  NA         NA      NA
-      m2.1                     NA                  NA         NA      NA
-           AccuracyLowerSD AccuracyUpperSD AccuracyNullSD AccuracyPValueSD
-      m1.1              NA              NA             NA               NA
-      m2.1              NA              NA             NA               NA
-           McnemarPValueSD PositiveSD NegativeSD True PositiveSD False PositiveSD
-      m1.1              NA         NA         NA              NA               NA
-      m2.1              NA         NA         NA              NA               NA
-           True NegativeSD False NegativeSD CBISD pAUCSD Omission_10pctSD
-      m1.1              NA               NA    NA     NA               NA
-      m2.1              NA               NA    NA     NA               NA
+                             algo       ROC       TSS Sensitivity Specificity
+      naive_bayes_pa1 naive_bayes 0.9132420 0.3264840       0.993       0.333
+      naive_bayes_pa2 naive_bayes 0.8387097 0.4548387       0.955       0.500
+                      Pos Pred Value Neg Pred Value Precision Recall    F1 Prevalence
+      naive_bayes_pa1          0.935          0.833     0.935  0.993 0.963      0.907
+      naive_bayes_pa2          0.967          0.417     0.967  0.955 0.961      0.939
+                      Detection Rate Detection Prevalence Balanced Accuracy Accuracy
+      naive_bayes_pa1          0.901                0.963             0.663    0.932
+      naive_bayes_pa2          0.897                0.927             0.727    0.927
+                      Kappa AccuracyLower AccuracyUpper AccuracyNull AccuracyPValue
+      naive_bayes_pa1 0.447         0.881         0.965        0.907          0.669
+      naive_bayes_pa2 0.416         0.876         0.962        0.939          1.000
+                      McnemarPValue Positive Negative True Positive False Positive
+      naive_bayes_pa1         0.211      146       15           145              5
+      naive_bayes_pa2         0.773      155       10           148             23
+                      True Negative False Negative   CBI pAUC Omission_10pct ROCSD
+      naive_bayes_pa1             5             11 0.862  NaN          0.075    NA
+      naive_bayes_pa2             5              5 0.383  NaN          0.090    NA
+                      TSSSD SensitivitySD SpecificitySD Pos Pred ValueSD
+      naive_bayes_pa1    NA            NA            NA               NA
+      naive_bayes_pa2    NA            NA            NA               NA
+                      Neg Pred ValueSD PrecisionSD RecallSD F1SD PrevalenceSD
+      naive_bayes_pa1               NA          NA       NA   NA           NA
+      naive_bayes_pa2               NA          NA       NA   NA           NA
+                      Detection RateSD Detection PrevalenceSD Balanced AccuracySD
+      naive_bayes_pa1               NA                     NA                  NA
+      naive_bayes_pa2               NA                     NA                  NA
+                      AccuracySD KappaSD AccuracyLowerSD AccuracyUpperSD
+      naive_bayes_pa1         NA      NA              NA              NA
+      naive_bayes_pa2         NA      NA              NA              NA
+                      AccuracyNullSD AccuracyPValueSD McnemarPValueSD PositiveSD
+      naive_bayes_pa1             NA               NA              NA         NA
+      naive_bayes_pa2             NA               NA              NA         NA
+                      NegativeSD True PositiveSD False PositiveSD True NegativeSD
+      naive_bayes_pa1         NA              NA               NA              NA
+      naive_bayes_pa2         NA              NA               NA              NA
+                      False NegativeSD CBISD pAUCSD Omission_10pctSD
+      naive_bayes_pa1               NA    NA     NA               NA
+      naive_bayes_pa2               NA    NA     NA               NA
       
 

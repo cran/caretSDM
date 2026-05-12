@@ -51,29 +51,54 @@ test_that("predict_sdm2", {
   p <- predict_sdm(i, th = 0.5)
 
   expect_true("predictions" %in% names(p))
-  expect_true("ensembles" %in% names(p$predictions))
 
   expect_equal(get_scenarios_data(p), p$scenarios$data)
 
   pred <- get_predictions(p)
   expect_true(all(names(pred$current$`Araucaria angustifolia`) %in%
                     names(p$models$models$`Araucaria angustifolia`)))
-  expect_true(all(pred$current$`Araucaria angustifolia`$m1.1$cell_id %in%
+  expect_true(all(pred$current$`Araucaria angustifolia`$naive_bayes_pa1$cell_id %in%
                     p$predictors$grid$cell_id))
   expect_equal(c("cell_id", "bio1", "bio12", "presence", "pseudoabsence", "geometry"),
-               colnames(pred$current$`Araucaria angustifolia`$m1.1))
-  expect_true(unique(sf::st_geometry_type(pred$current$`Araucaria angustifolia`$m1.1)) == "POLYGON")
-  expect_equal(sf::st_crs(pred$current$`Araucaria angustifolia`$m1.1),
+               colnames(pred$current$`Araucaria angustifolia`$naive_bayes_pa1))
+  expect_true(unique(sf::st_geometry_type(pred$current$`Araucaria angustifolia`$naive_bayes_pa1)) == "POLYGON")
+  expect_equal(sf::st_crs(pred$current$`Araucaria angustifolia`$naive_bayes_pa1),
                sf::st_crs(p$scenarios$data$current))
-  expect_equal(sf::st_bbox(pred$current$`Araucaria angustifolia`$m1.1),
+  expect_equal(sf::st_bbox(pred$current$`Araucaria angustifolia`$naive_bayes_pa1),
                sf::st_bbox(p$scenarios$data$current))
+})
 
-  ens <- get_ensembles(p)
-  expect_equal(rownames(p$predictions$ensembles), rownames(ens))
-  expect_equal(rownames(ens), species_names(p))
-  expect_equal(colnames(ens), scenarios_names(p))
-  expect_equal(c("cell_id", "mean_occ_prob", "wmean_AUC", "committee_avg"),
-               colnames(ens[1,1][[1]]))
+
+test_that("predict_sdm2-maxent", {
+  skip_on_cran()
+  i2 <- input_sdm(oc, sa)
+  suppressMessages(i2 <- background(i2))
+  test_that("predict_sdm - no model", {
+    expect_error(predict_sdm(i2))
+  })
+  ctrl <- caret::trainControl(
+    method = "cv", number = 2, classProbs = TRUE, returnResamp = "all",
+    summaryFunction = caret::twoClassSummary, savePredictions = "all"
+  )
+  suppressWarnings(i2 <- train_sdm(i2, algo = c("maxent"), ctrl = ctrl))
+  p <- predict_sdm(i2, th = 0.5)
+
+  expect_true("predictions" %in% names(p))
+
+  expect_equal(get_scenarios_data(p), p$scenarios$data)
+
+  pred <- get_predictions(p)
+  expect_true(all(names(pred$current$`Araucaria angustifolia`) %in%
+                    names(p$models$models$`Araucaria angustifolia`)))
+  expect_true(all(pred$current$`Araucaria angustifolia`$maxent_bg1$cell_id %in%
+                    p$predictors$grid$cell_id))
+  expect_equal(c("cell_id", "bio1", "bio12", "presence", "background", "geometry"),
+               colnames(pred$current$`Araucaria angustifolia`$maxent_bg1))
+  expect_true(unique(sf::st_geometry_type(pred$current$`Araucaria angustifolia`$maxent_bg1)) == "POLYGON")
+  expect_equal(sf::st_crs(pred$current$`Araucaria angustifolia`$maxent_bg1),
+               sf::st_crs(p$scenarios$data$current))
+  expect_equal(sf::st_bbox(pred$current$`Araucaria angustifolia`$maxent_bg1),
+               sf::st_bbox(p$scenarios$data$current))
 })
 
 test_that("predict_sdm - th 0", {
@@ -88,27 +113,19 @@ test_that("predict_sdm2 - th 0", {
   p <- predict_sdm(i, th=0)
 
   expect_true("predictions" %in% names(p))
-  expect_true("ensembles" %in% names(p$predictions))
 
   pred <- get_predictions(p)
   expect_equal(names(pred$current$`Araucaria angustifolia`),
                names(p$models$models$`Araucaria angustifolia`))
-  expect_true(all(pred$current$`Araucaria angustifolia`$m1.1$cell_id %in%
+  expect_true(all(pred$current$`Araucaria angustifolia`$naive_bayes_pa1$cell_id %in%
                     p$predictors$grid$cell_id))
   expect_equal(c("cell_id", "bio1", "bio12", "presence", "pseudoabsence", "geometry"),
-               colnames(pred$current$`Araucaria angustifolia`$m1.1))
-  expect_true(unique(sf::st_geometry_type(pred$current$`Araucaria angustifolia`$m1.1)) == "POLYGON")
-  expect_equal(sf::st_crs(pred$current$`Araucaria angustifolia`$m1.1),
+               colnames(pred$current$`Araucaria angustifolia`$naive_bayes_pa1))
+  expect_true(unique(sf::st_geometry_type(pred$current$`Araucaria angustifolia`$naive_bayes_pa1)) == "POLYGON")
+  expect_equal(sf::st_crs(pred$current$`Araucaria angustifolia`$naive_bayes_pa1),
                sf::st_crs(p$scenarios$data$current))
-  expect_equal(sf::st_bbox(pred$current$`Araucaria angustifolia`$m1.1),
+  expect_equal(sf::st_bbox(pred$current$`Araucaria angustifolia`$naive_bayes_pa1),
                sf::st_bbox(p$scenarios$data$current))
-
-  ens <- get_ensembles(p)
-  expect_equal(rownames(p$predictions$ensembles), rownames(ens))
-  expect_equal(rownames(ens), species_names(p))
-  expect_equal(colnames(ens), scenarios_names(p))
-  expect_equal(c("cell_id", "mean_occ_prob", "wmean_AUC", "committee_avg"),
-               colnames(ens[1,1][[1]]))
 })
 
 test_that("predict_sdm - th function", {
@@ -124,27 +141,26 @@ test_that("predict_sdm - th function", {
   skip_on_cran()
   p <- predict_sdm(i, th=mean)
   expect_true("predictions" %in% names(p))
-  expect_true("ensembles" %in% names(p$predictions))
 
   pred <- get_predictions(p)
   expect_true(all(names(pred$current$`Araucaria angustifolia`) %in%
                     names(p$models$models$`Araucaria angustifolia`)))
-  expect_true(all(pred$current$`Araucaria angustifolia`$m2.1$cell_id %in%
+  expect_true(all(pred$current$`Araucaria angustifolia`$naive_bayes_pa2$cell_id %in%
                     p$predictors$grid$cell_id))
   expect_equal(c("cell_id", "bio1", "bio12", "presence", "pseudoabsence", "geometry"),
-               colnames(pred$current$`Araucaria angustifolia`$m2.1))
-  expect_true(unique(sf::st_geometry_type(pred$current$`Araucaria angustifolia`$m2.1)) == "POLYGON")
-  expect_equal(sf::st_crs(pred$current$`Araucaria angustifolia`$m2.1),
+               colnames(pred$current$`Araucaria angustifolia`$naive_bayes_pa2))
+  expect_true(unique(sf::st_geometry_type(pred$current$`Araucaria angustifolia`$naive_bayes_pa2)) == "POLYGON")
+  expect_equal(sf::st_crs(pred$current$`Araucaria angustifolia`$naive_bayes_pa2),
                sf::st_crs(p$scenarios$data$current))
-  expect_equal(sf::st_bbox(pred$current$`Araucaria angustifolia`$m2.1),
+  expect_equal(sf::st_bbox(pred$current$`Araucaria angustifolia`$naive_bayes_pa2),
                sf::st_bbox(p$scenarios$data$current))
 
-  ens <- get_ensembles(p)
-  expect_equal(rownames(p$predictions$ensembles), rownames(ens))
-  expect_equal(rownames(ens), species_names(p))
-  expect_equal(colnames(ens), scenarios_names(p))
-  expect_equal(c("cell_id", "mean_occ_prob", "wmean_AUC", "committee_avg"),
-               colnames(ens[1,1][[1]]))
+  #ens <- get_ensembles(p)
+  #expect_equal(rownames(p$predictions$ensembles), rownames(ens))
+  #expect_equal(rownames(ens), species_names(p))
+  #expect_equal(colnames(ens), scenarios_names(p))
+  #expect_equal(c("cell_id", "mean_occ_prob", "wmean_AUC", "committee_avg"),
+  #             colnames(ens[1,1][[1]]))
 })
 
 test_that("test ensembles", {
@@ -156,7 +172,7 @@ test_that("test ensembles", {
 
 test_that("test ensembles", {
   skip_on_cran()
-  expect_no_error(predict_sdm(i, th=mean, ensembles = FALSE))
+  expect_no_error(predict_sdm(i, th=mean))
 
   i2 <- i
   i2$scenarios$data$teste <- i2$scenarios$data$current
@@ -164,23 +180,23 @@ test_that("test ensembles", {
   i2$scenarios$data$teste$bio1 <- i2$scenarios$data$teste$bio1*0
 
   p <- predict_sdm(i2, th=mean)
-  e <- get_ensembles(p)
-
-  expect_equal(length(unique(e[,"teste"][[1]]$committee_avg)), 1)
-  expect_equal(length(unique(e[,"teste"][[1]]$wmean_AUC)), 1)
-  expect_equal(length(unique(e[,"teste"][[1]]$mean_occ_prob)), 1)
-  expect_false(any(e[,"current"][[1]][,2] > 1 ))
-  expect_false(any(e[,"current"][[1]][,3] > 1 ))
-  expect_false(any(e[,"current"][[1]][,4] > 1 ))
-  expect_false(any(e[,"current"][[1]][,2] < 0 ))
-  expect_false(any(e[,"current"][[1]][,3] < 0 ))
-  expect_false(any(e[,"current"][[1]][,4] < 0 ))
-  expect_false(any(is.na(e[,"current"][[1]][,2])))
-  expect_false(any(is.na(e[,"current"][[1]][,3])))
-  expect_false(any(is.na(e[,"current"][[1]][,4])))
-  expect_false(any(is.nan(e[,"current"][[1]][,2])))
-  expect_false(any(is.nan(e[,"current"][[1]][,3])))
-  expect_false(any(is.nan(e[,"current"][[1]][,4])))
+  #e <- get_ensembles(p)
+#
+  #expect_equal(length(unique(e[,"teste"][[1]]$committee_avg)), 1)
+  #expect_equal(length(unique(e[,"teste"][[1]]$wmean_AUC)), 1)
+  #expect_equal(length(unique(e[,"teste"][[1]]$mean_occ_prob)), 1)
+  #expect_false(any(e[,"current"][[1]][,2] > 1 ))
+  #expect_false(any(e[,"current"][[1]][,3] > 1 ))
+  #expect_false(any(e[,"current"][[1]][,4] > 1 ))
+  #expect_false(any(e[,"current"][[1]][,2] < 0 ))
+  #expect_false(any(e[,"current"][[1]][,3] < 0 ))
+  #expect_false(any(e[,"current"][[1]][,4] < 0 ))
+  #expect_false(any(is.na(e[,"current"][[1]][,2])))
+  #expect_false(any(is.na(e[,"current"][[1]][,3])))
+  #expect_false(any(is.na(e[,"current"][[1]][,4])))
+  #expect_false(any(is.nan(e[,"current"][[1]][,2])))
+  #expect_false(any(is.nan(e[,"current"][[1]][,3])))
+  #expect_false(any(is.nan(e[,"current"][[1]][,4])))
 })
 
 test_that("add_input_sdm", {

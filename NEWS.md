@@ -60,3 +60,37 @@
 # caretSDM 1.5
 
 -   Ensembles and projections performance were dramatically tunned to be more efficient.
+
+# caretSDM 1.6
+
+-   Inclusion of pseudoabsence selection through a custom function.
+
+# caretSDM 1.6.1
+
+-   Inclusion of background selection through a custom function.
+
+# caretSDM 1.7
+
+-   predict_sdm doesn't perform ensembles anymore.
+-   Ensembles are included in the ensembles_sdm function.
+-   All adjusts necessary to properly perform that operation, including tests, are implemented.
+-   Vignettes and examples were changed to include ensembles_sdm function.
+-   data_clean now accepts a custom function to clean occurrences.
+
+# caretSDM 1.8
+
+-   New wrapper for multicollinearity reduction with PCA, VIF and custom functions.
+-   Pseudoabsences and ensemble now accept custom functions.
+-   crop_by in sdm_area now performs masking.
+
+# caretSDM 1.8.1
+
+-   A minor adjustment to predict_sdm was necessary to allow for multiple scenarios.
+
+# caretSDM 1.8.2
+
+-   Models IDs were changed.
+
+# caretSDM 1.8.3
+
+-   Inclusion of ECDFniche to provide the mahalanobis distance method.

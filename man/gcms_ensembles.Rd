@@ -56,6 +56,10 @@ if (interactive()) {
   # Predict models:
   i  <- predict_sdm(i, th=0.8)
 
+  # Ensemble:
+  i <- ensemble_sdm(i, method = "average")
+  i
+
   # Ensemble GCMs:
   i <- gcms_ensembles(i, gcms = c("ca", "mi"))
   i
@@ -64,7 +68,7 @@ if (interactive()) {
 }
 \seealso{
 \code{\link{GBIF_data} \link{occurrences_sdm} \link{sdm_area} \link{input_sdm}
-\link{predictors}}
+\link{get_predictor_names}}
 }
 \author{
 Luíz Fernando Esser (luizesser@gmail.com)
