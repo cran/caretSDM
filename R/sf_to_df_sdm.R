@@ -1,5 +1,5 @@
-#' @keywords internal
 #' Transform a occurrences simplefeature in a data.frame.
+#' @keywords internal
 #' @param occ_sf SimpleFeatures to transform in data.frame. Usually from occurrences slot.
 #' @return Data.frame with three columns: "species", "decimalLongitude" and "decimalLatitude".
 #' @importFrom sf st_coordinates
@@ -9,8 +9,20 @@
   df <- occ_sf |>
     sf::st_coordinates() |>
     as.data.frame() |>
-    cbind(species=occ_sf$species)
-  df <- df[,c("species", "X", "Y")]
+    cbind(species = occ_sf$species)
+  df <- df[, c("species", "X", "Y")]
   colnames(df) <- c("species", "decimalLongitude", "decimalLatitude")
   return(df)
+}
+
+.check_suggested <- function(pkg, fun = NULL) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    msg <- paste0(
+      "Package '", pkg, "' is required",
+      if (!is.null(fun)) paste0(" to use ", fun, "()") else "",
+      ". Install it with install.packages('", pkg, "')."
+    )
+    stop(msg, call. = FALSE)
+  }
+  invisible(TRUE)
 }

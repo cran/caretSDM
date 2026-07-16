@@ -19,14 +19,46 @@
 #' @param year Specify the year you want to retrieve data. Possible entries are:
 #' "2030", "2050", "2070" and/or "2090". You can use a vector to provide more than one entry.
 #' @param gcm GCMs to be considered in future scenarios. You can use a vector to provide more than
-#' one entry.
+#' one entry (see Details).
 #' @param ssp SSPs for future data. Possible entries are: "126", "245", "370" and/or "585".
 #' You can use a vector to provide more than one entry.
 #' @param resolution You can select one resolution from the following alternatives: 10, 5, 2.5 OR 30.
 #'
 #' @details This function will create a folder. All the data downloaded will be stored in this
 #' folder. Note that, despite being possible to retrieve a lot of data at once, it is not
-#' recommended to do so, since the data is very heavy.
+#' recommended to do so, since the data could be very heavy.
+#'
+#' Possible values for GCMs are:
+#'
+#' | Code | GCM |
+#' |-----|----|
+#' | ac | ACCESS-CM2 |
+#' | ae | ACCESS-ESM1-5 |
+#' | bc | BCC-CSM2-MR |
+#' | ca | CanESM5 |
+#' | cc | CanESM5-CanOE |
+#' | ce | CMCC-ESM2 |
+#' | cn | CNRM-CM6-1 |
+#' | ch | CNRM-CM6-1-HR |
+#' | cr | CNRM-ESM2-1 |
+#' | ec | EC-Earth3-Veg |
+#' | ev | EC-Earth3-Veg-LR |
+#' | fi | FIO-ESM-2-0 |
+#' | gf | GFDL-ESM4 |
+#' | gg | GISS-E2-1-G |
+#' | gh | GISS-E2-1-H |
+#' | hg | HadGEM3-GC31-LL |
+#' | in | INM-CM4-8 |
+#' | ic | INM-CM5-0 |
+#' | ip | IPSL-CM6A-LR |
+#' | me | MIROC-ES2L |
+#' | mi | MIROC6 |
+#' | mp | MPI-ESM1-2-HR |
+#' | ml | MPI-ESM1-2-LR |
+#' | mr | MRI-ESM2-0 |
+#' | uk | UKESM1-0-LL |
+#' | all | All available GCMs |
+#'
 #'
 #' @returns If data is not downloaded, the function downloads the data and has no return value.
 #'
@@ -37,8 +69,8 @@
 #'
 #' @examples
 #' ## download data from multiple periods:
-#' #year <- c("2050", "2090")
-#' #WorldClim_data(path = "",
+#' # year <- c("2050", "2090")
+#' # WorldClim_data(path = "",
 #' #               period = "future",
 #' #               variable = "bioc",
 #' #               year = year,
@@ -47,7 +79,7 @@
 #' #               resolution = 10)
 #'
 #' ## download data from one specific period
-#' #WorldClim_data(path = "",
+#' # WorldClim_data(path = "",
 #' #               period = "future",
 #' #               variable = "bioc",
 #' #               year = "2070",
@@ -55,8 +87,6 @@
 #' #               ssp = "585",
 #' #               resolution = 10)
 #'
-#'
-#' @importFrom httr2 request req_url req_error req_perform resp_is_error resp_status
 #' @importFrom cli cli_alert_warning cli_abort cli_inform
 #' @importFrom utils unzip
 #' @import checkCLI
@@ -69,7 +99,7 @@ WorldClim_data <- function(path = NULL,
                            gcm = "mi",
                            ssp = "585",
                            resolution = 10) {
-
+  .check_suggested("httr2", "WorldClim_data")
   ## argument checks (unchanged)
   if (!all(period %in% c("current", "future"))) {
     cli::cli_abort(c(
@@ -124,35 +154,6 @@ WorldClim_data <- function(path = NULL,
   res <- ifelse(resolution == 30, "s", "m")
   l <- list()
 
-  .warn <- function(...) cli::cli_alert_warning(paste0(...))
-
-  ## helper: GET file with httr2, but never throw on HTTP status
-  .download_file_httr2 <- function(url, destfile) {
-    req <- httr2::request(url) |>
-      httr2::req_error(is_error = \(resp) FALSE)  # keep 4xx/5xx as responses, not errors [web:33][web:38]
-
-    resp <- try(httr2::req_perform(req), silent = TRUE)
-
-    if (inherits(resp, "try-error")) {
-      .warn("Failed to perform request to ", url, ".")
-      return(FALSE)
-    }
-
-    if (httr2::resp_is_error(resp)) {
-      .warn("HTTP error ", httr2::resp_status(resp), " when requesting ", url, ".")
-      return(FALSE)
-    }
-
-    # write raw body to disk; works for .zip and .tif [web:27][web:28]
-    body <- httr2::resp_body_raw(resp)
-    ok <- try(writeBin(body, destfile), silent = TRUE)
-    if (inherits(ok, "try-error")) {
-      .warn("Failed to write response body to file ", destfile, ".")
-      return(FALSE)
-    }
-    TRUE
-  }
-
   ## CURRENT PERIOD
   if (period == "current") {
     if (is.null(path)) {
@@ -175,13 +176,13 @@ WorldClim_data <- function(path = NULL,
 
       ok <- .download_file_httr2(url, zipfile)
       if (!ok) {
-        .warn("Failed to download WorldClim current data. The server may be unavailable or the URL may have changed.")
+        cli::cli_alert_warning(paste0("Failed to download WorldClim current data. The server may be unavailable or the URL may have changed."))
         return(invisible(l))
       }
 
       uz <- try(utils::unzip(zipfile, exdir = path), silent = TRUE)
       if (inherits(uz, "try-error")) {
-        .warn("Download succeeded but unzip failed for file ", zipfile, ".")
+        cli::cli_alert_warning(paste0("Download succeeded but unzip failed for file ", zipfile, "."))
         return(invisible(l))
       }
 
@@ -239,12 +240,12 @@ WorldClim_data <- function(path = NULL,
 
             ok <- .download_file_httr2(url, destfile)
             if (!ok) {
-              .warn("Failed to download ", nome, ". The server may be unavailable or the URL may have changed.")
+              cli::cli_alert_warning(paste0("Failed to download ", nome, ". The server may be unavailable or the URL may have changed."))
               next
             }
           } else {
             cli::cli_inform(paste0(
-              "The file for future scenario (", destfile,") is already downloaded."
+              "The file for future scenario (", destfile, ") is already downloaded."
             ))
           }
         }
@@ -252,4 +253,30 @@ WorldClim_data <- function(path = NULL,
     }
   }
   return(invisible(l))
+}
+
+.download_file_httr2 <- function(url, destfile) {
+  req <- httr2::request(url) |>
+    httr2::req_error(is_error = \(resp) FALSE) # keep 4xx/5xx as responses, not errors [web:33][web:38]
+
+  resp <- try(httr2::req_perform(req), silent = TRUE)
+
+  if (inherits(resp, "try-error")) {
+    cli::cli_alert_warning(paste0("Failed to perform request to ", url, "."))
+    return(FALSE)
+  }
+
+  if (httr2::resp_is_error(resp)) {
+    cli::cli_alert_warning(paste0("HTTP error ", httr2::resp_status(resp), " when requesting ", url, "."))
+    return(FALSE)
+  }
+
+  # write raw body to disk; works for .zip and .tif [web:27][web:28]
+  body <- httr2::resp_body_raw(resp)
+  ok <- try(writeBin(body, destfile), silent = TRUE)
+  if (inherits(ok, "try-error")) {
+    cli::cli_alert_warning(paste0("Failed to write response body to file ", destfile, "."))
+    return(FALSE)
+  }
+  TRUE
 }

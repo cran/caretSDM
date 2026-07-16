@@ -13,7 +13,13 @@ ensemble_sdm(m,
             fun = NULL
             )
 
-get_ensembles(i)
+get_ensembles(
+  i,
+  type = "matrix",
+  spp_name = NULL,
+  scenario = NULL,
+  ensemble_type = NULL
+)
 
 add_ensembles(e1, e2)
 }
@@ -33,6 +39,20 @@ the data. It will receive caret's train object and must return a numeric value (
 see details).}
 
 \item{i}{A \code{input_sdm} or a \code{predictions} object.}
+
+\item{type}{Character. Output format desired. One of \code{"matrix"},
+\code{"sf"}, \code{"stars"}, \code{"raster"}, or \code{"rast"}. Defaults to
+\code{"matrix"}.}
+
+\item{spp_name}{Character or \code{NULL}. Name of the species to retrieve ensembles for.
+Defaults to the first available species if \code{NULL}.}
+
+\item{scenario}{Character or \code{NULL}. Name of the scenario to retrieve ensembles for.
+Defaults to the first available scenario if \code{NULL}.}
+
+\item{ensemble_type}{Character or \code{NULL}. The ensemble method to use for retrieval.
+Must be a subset of the methods stored in \code{i$ensembles$method}. Defaults to the first
+method if \code{NULL}.}
 
 \item{e1}{A \code{ensembles} object.}
 
@@ -79,7 +99,7 @@ object.
 if (interactive()) {
   # Create sdm_area object:
   set.seed(1)
-  sa <- sdm_area(parana, cell_size = 100000, crs = 6933)
+  sa <- sdm_area(parana, cell_size = 100000, output_crs = 6933)
 
   # Include predictors:
   sa <- add_predictors(sa, bioc) |> select_predictors(c("bio1", "bio12"))
@@ -88,29 +108,31 @@ if (interactive()) {
   sa <- add_scenarios(sa)
 
   # Create occurrences:
-  oc <- occurrences_sdm(occ, crs = 6933) |> join_area(sa)
+  oc <- occurrences_sdm(occ, occ_crs = 6933)
 
   # Create input_sdm:
   i <- input_sdm(oc, sa)
 
   # Pseudoabsence generation:
-  i <- pseudoabsences(i, method="random", n_set=2)
+  i <- pseudoabsences(i, method = "random", n_set = 2)
 
   # Custom trainControl:
-  ctrl_sdm <- caret::trainControl(method = "boot",
-                                  number = 1,
-                                  repeats = 1,
-                                  classProbs = TRUE,
-                                  returnResamp = "all",
-                                  summaryFunction = summary_sdm,
-                                  savePredictions = "all")
+  ctrl_sdm <- caret::trainControl(
+    method = "boot",
+    number = 1,
+    repeats = 1,
+    classProbs = TRUE,
+    returnResamp = "all",
+    summaryFunction = summary_sdm,
+    savePredictions = "all"
+  )
 
   # Train models:
-  i <- train_sdm(i, algo = c("naive_bayes"), ctrl=ctrl_sdm) |>
+  i <- train_sdm(i, algo = c("naive_bayes"), ctrl = ctrl_sdm) |>
     suppressWarnings()
 
   # Predict models:
-  i  <- predict_sdm(i, th = 0.8)
+  i <- predict_sdm(i, th = 0.8)
 
   # Ensemble:
   i <- ensemble_sdm(i, method = "average")
@@ -120,18 +142,18 @@ if (interactive()) {
 # Example from a custom function to obtain the threshold that maximizes
 # the sensitivity plus specificity:
 MaxSeSp <- function(mod) {
-   th <- caret::thresholder(mod,
-                            threshold = seq(0, 1, by = 0.001),
-                            final = TRUE,
-                            statistics = c("Sensitivity", "Specificity")
-                            )
-   th <- th$prob_threshold[which.max(th$Sensitivity + th$Specificity)]
-   if (length(th) > 1) mean(th) else th
+  th <- caret::thresholder(mod,
+    threshold = seq(0, 1, by = 0.001),
+    final = TRUE,
+    statistics = c("Sensitivity", "Specificity")
+  )
+  th <- th$prob_threshold[which.max(th$Sensitivity + th$Specificity)]
+  if (length(th) > 1) mean(th) else th
 }
 
 # Example from a custom function to obtain ensembles using the median instead of the mean:
 median_ensemble <- function(pred_mat) {
- apply(pred_mat, 1, median, na.rm = TRUE)
+  apply(pred_mat, 1, median, na.rm = TRUE)
 }
 
 }

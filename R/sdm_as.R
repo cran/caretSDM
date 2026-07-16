@@ -27,7 +27,7 @@
 #' @examples
 #' if (interactive()) {
 #'   # Create sdm_area object:
-#'   sa <- sdm_area(parana, cell_size = 100000, crs = 6933)
+#'   sa <- sdm_area(parana, cell_size = 100000, output_crs = 6933)
 #'
 #'   # Include predictors:
 #'   sa <- add_predictors(sa, bioc) |> select_predictors(c("bio1", "bio12"))
@@ -36,7 +36,7 @@
 #'   sa <- add_scenarios(sa)
 #'
 #'   # Create occurrences:
-#'   oc <- occurrences_sdm(occ, crs = 6933) |> join_area(sa)
+#'   oc <- occurrences_sdm(occ, occ_crs = 6933)
 #'
 #'   # Create input_sdm:
 #'   i <- input_sdm(oc, sa)
@@ -45,19 +45,21 @@
 #'   i <- pseudoabsences(i, method = "random", n_set = 2)
 #'
 #'   # Custom trainControl:
-#'   ctrl_sdm <- caret::trainControl(method = "boot",
-#'                                   number = 1,
-#'                                   classProbs = TRUE,
-#'                                   returnResamp = "all",
-#'                                   summaryFunction = summary_sdm,
-#'                                   savePredictions = "all")
+#'   ctrl_sdm <- caret::trainControl(
+#'     method = "boot",
+#'     number = 1,
+#'     classProbs = TRUE,
+#'     returnResamp = "all",
+#'     summaryFunction = summary_sdm,
+#'     savePredictions = "all"
+#'   )
 #'
 #'   # Train models:
 #'   i <- train_sdm(i, algo = c("naive_bayes"), ctrl = ctrl_sdm) |>
 #'     suppressWarnings()
 #'
 #'   # Predict models:
-#'   i  <- predict_sdm(i, th = 0.8)
+#'   i <- predict_sdm(i, th = 0.8)
 #'
 #'   # Transform in stars:
 #'   sdm_as_stars(i)
@@ -78,13 +80,13 @@ sdm_as_stars <- function(x, what = NULL, spp = NULL, scen = NULL, id = NULL, ens
       what <- "predictions"
     } else if ("predictors" %in% names(x)) {
       what <- "predictors"
-    } else if ("scenarios" %in% names(x)) {
-      what <- "scenarios"
     }
   }
   if (is_input_sdm(x)) {
     if (what == "scenarios") {
-      s <- sapply(x$scenarios$data, function(y){stars::st_as_stars(y)}, USE.NAMES = TRUE, simplify = FALSE)
+      s <- sapply(x$scenarios$data, function(y) {
+        stars::st_as_stars(y)
+      }, USE.NAMES = TRUE, simplify = FALSE)
       return(s)
     }
     if (what == "predictors") {
@@ -134,8 +136,6 @@ sdm_as_raster <- function(x, what = NULL, spp = NULL, scen = NULL, id = NULL, en
       what <- "predictions"
     } else if ("predictors" %in% names(x)) {
       what <- "predictors"
-    } else if ("scenarios" %in% names(x)) {
-      what <- "scenarios"
     }
   }
   if (is_input_sdm(x)) {
@@ -199,8 +199,6 @@ sdm_as_terra <- function(x, what = NULL, spp = NULL, scen = NULL, id = NULL, ens
       what <- "predictions"
     } else if ("predictors" %in% names(x)) {
       what <- "predictors"
-    } else if ("scenarios" %in% names(x)) {
-      what <- "scenarios"
     }
   }
   if (is_input_sdm(x)) {

@@ -22,12 +22,11 @@
 #'
 #' @examples
 #' ## Select species names:
-#' #s <- c("Araucaria angustifolia", "Salminus brasiliensis")
+#' # s <- c("Araucaria angustifolia", "Salminus brasiliensis")
 #'
 #' ## Run function:
-#' #oc <- GBIF_data(s)
+#' # oc <- GBIF_data(s)
 #'
-#' @importFrom rgbif occ_data
 #' @importFrom dplyr bind_rows
 #' @importFrom stats na.omit
 #' @importFrom utils head write.csv read.csv
@@ -35,6 +34,7 @@
 #'
 #' @export
 GBIF_data <- function(s, file = NULL, as_df = FALSE, ...) {
+  .check_suggested("rgbif", "GBIF_data")
   assert_logical_cli(
     as_df,
     any.missing = FALSE,
@@ -52,12 +52,12 @@ GBIF_data <- function(s, file = NULL, as_df = FALSE, ...) {
     unique = TRUE
   )
 
-  if(!is.null(file)){
-    if(file.exists(file)){
+  if (!is.null(file)) {
+    if (file.exists(file)) {
       message(paste0("File already exists. Importing from: ", file))
       data <- utils::read.csv(file)
-      if(!as_df){
-        data <- occurrences_sdm(data, crs = 4326)
+      if (!as_df) {
+        data <- occurrences_sdm(data, occ_crs = 4326)
       }
       return(data)
     }
@@ -87,13 +87,14 @@ GBIF_data <- function(s, file = NULL, as_df = FALSE, ...) {
   if (!is.null(file)) {
     if (grepl("/", file)) {
       dir.create(paste(utils::head(unlist(strsplit(file, "/")), -1), collapse = "/"),
-                 recursive = TRUE)
+        recursive = TRUE
+      )
     }
     utils::write.csv(data, file, row.names = FALSE)
   }
 
-  if(!as_df){
-    data <- occurrences_sdm(data, crs = 4326)
+  if (!as_df) {
+    data <- occurrences_sdm(data, occ_crs = 4326)
   }
 
   return(data)

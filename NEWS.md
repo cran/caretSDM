@@ -94,3 +94,42 @@
 # caretSDM 1.8.3
 
 -   Inclusion of ECDFniche to provide the mahalanobis distance method.
+
+# caretSDM 1.9
+
+-   Some packages were moved from Imports do Suggestions and now are used conditionally along the package functions.
+
+# caretSDM 1.9.1
+
+-   The process now accepts that models can fail.
+
+# caretSDM 1.9.2
+
+-   'crs' argument in occurrences_sdm and sdm_area is now changed to 'occ_crs' and 'output_crs', respectively.
+
+# caretSDM 1.9.3
+
+-   New assertions to avoid errors when plotting, using MEM, ESM, PDP, validation metrics, background and scenarios.
+-   Correction for MaxEnt: models were trained using background as presences.
+-   Inclusion of a first draft of a stacking meta-learner modeling (stack_sdm).
+-   I changed the print objects to be more similar with ODMAP protocol.
+
+# caretSDM 1.9.4
+
+-   Mapview from ensembles and predictions were corrected.
+
+
+# caretSDM 1.9.5
+
+-   Assertion on add_scenarios were missing.
+-   get_ensembles now returns maps and not just the final matrix.
+
+# caretSDM 1.9.6
+
+-   Correction on add_scenarios and sdm_area to allow the usage of a character (automatizing the import of data through these functions).
+-   Use of Rmd in documentation.
+-   Change in add_scenarios naming.
+
+# caretSDM 1.9.7
+
+-   Inclusion of videos and update of vignettes in the website.

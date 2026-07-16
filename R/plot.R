@@ -30,10 +30,7 @@
 #' @author Luíz Fernando Esser (luizesser@gmail.com)
 #' https://luizfesser.wordpress.com
 #'
-#' @importFrom mapview mapview
-#' @importFrom ggplot2 ggplot geom_sf aes scale_fill_viridis_c xlab ylab ggtitle theme_minimal unit
-#' scale_color_viridis_c geom_point scale_y_continuous scale_x_continuous stat_density_2d_filled
-#' after_stat stat_summary_2d
+#' @importFrom ggplot2 ggplot geom_sf aes scale_fill_viridis_c xlab ylab ggtitle theme_minimal unit scale_color_viridis_c geom_point scale_y_continuous scale_x_continuous stat_density_2d_filled after_stat stat_summary_2d
 #' @importFrom ggspatial annotation_scale north_arrow_fancy_orienteering annotation_north_arrow
 #' @importFrom dplyr filter select all_of mutate
 #' @importFrom gtools mixedsort
@@ -52,9 +49,9 @@ plot_occurrences <- function(i, spp_name = NULL, pa = TRUE, pa_id = 1, ...) {
   assert_logical_cli(pa)
   assert_numeric_cli(pa_id)
   assert_names_cli(names(i), must.include = "occurrences")
-  if(is_input_sdm(i)){
-      return(plot(i$occurrences, spp_name, pa, pa_id, ...))
-  } else if (is_occurrences(i)){
+  if (is_input_sdm(i)) {
+    return(plot(i$occurrences, spp_name, pa, pa_id, ...))
+  } else if (is_occurrences(i)) {
     return(plot(i, spp_name, pa, pa_id, ...))
   }
 }
@@ -69,12 +66,12 @@ plot.occurrences <- function(x, spp_name = NULL, pa = TRUE, pa_id = 1, ...) {
     spp_name <- valid_spp[1]
   }
   grd <- dplyr::filter(grd, species %in% spp_name) |> dplyr::select(species)
-  if(!"pseudoabsences" %in% names(x)) {
+  if (!"pseudoabsences" %in% names(x)) {
     pa <- FALSE
   }
-  if(pa) {
+  if (pa) {
     grd_pa <- do.call(rbind, x$pseudoabsences$data[[spp_name]][pa_id])
-    grd_pa <-  grd_pa |>
+    grd_pa <- grd_pa |>
       dplyr::mutate(presence = rep(0, nrow(grd_pa))) |>
       dplyr::select("presence") |>
       sf::st_centroid()
@@ -123,10 +120,10 @@ plot.occurrences <- function(x, spp_name = NULL, pa = TRUE, pa_id = 1, ...) {
 #' @export
 plot_grid <- function(i, ...) {
   assert_subset_cli(class(i), c("sdm_area", "input_sdm"))
-  if(is_input_sdm(i)){
+  if (is_input_sdm(i)) {
     i <- i$predictors
   }
-  return(plot(i, scenario="grid", ...))
+  return(plot(i, scenario = "grid", ...))
 }
 
 #' @rdname plot_occurrences
@@ -134,10 +131,10 @@ plot_grid <- function(i, ...) {
 plot_predictors <- function(i, variables_selected = NULL, ...) {
   assert_subset_cli(class(i), c("sdm_area", "input_sdm"))
   assert_subset_cli(variables_selected, c(get_predictor_names(i), "vif", "pca"))
-  if (is_input_sdm(i)){
-    return(plot(i$predictors, variables_selected, scenario="predictors", ...))
+  if (is_input_sdm(i)) {
+    return(plot(i$predictors, variables_selected, scenario = "predictors", ...))
   } else if (is_sdm_area(i)) {
-    return(plot(i, variables_selected, scenario="predictors", ...))
+    return(plot(i, variables_selected, scenario = "predictors", ...))
   }
 }
 
@@ -153,16 +150,16 @@ plot_scenarios <- function(i, variables_selected = NULL, scenario = NULL, ...) {
 
 #' @exportS3Method base::plot
 plot.sdm_area <- function(x, variables_selected = NULL, scenario = NULL, ...) {
-  if(is.null(scenario)){
+  if (is.null(scenario)) {
     scenario <- scenarios_names(x)[1]
   }
-  if(scenario=="grid"){
+  if (scenario == "grid") {
     tmp <- ggplot2::ggplot(x$grid, ...)
-    if(!unique(sf::st_geometry_type(x$grid)) == "LINESTRING"){
-      tmp <- tmp + ggplot2::geom_sf(data=x$grid, ggplot2::aes(fill = cell_id)) +
+    if (!unique(sf::st_geometry_type(x$grid)) == "LINESTRING") {
+      tmp <- tmp + ggplot2::geom_sf(data = x$grid, ggplot2::aes(fill = cell_id)) +
         ggplot2::scale_fill_viridis_c()
     } else {
-      tmp <- tmp + ggplot2::geom_sf(data=x$grid, ggplot2::aes(color = cell_id)) +
+      tmp <- tmp + ggplot2::geom_sf(data = x$grid, ggplot2::aes(color = cell_id)) +
         ggplot2::scale_colour_viridis_c()
     }
     tmp <- tmp +
@@ -189,7 +186,7 @@ plot.sdm_area <- function(x, variables_selected = NULL, scenario = NULL, ...) {
     variables_selected <- get_predictor_names(x)
   }
 
- if(scenario=="predictors"){
+  if (scenario == "predictors") {
     st <- x$grid |> dplyr::select(dplyr::all_of(variables_selected))
     teste <- tidyr::pivot_longer(st, dplyr::all_of(variables_selected))
 
@@ -219,7 +216,7 @@ plot.sdm_area <- function(x, variables_selected = NULL, scenario = NULL, ...) {
       ggplot2::scale_fill_viridis_c() +
       ggplot2::xlab("Longitude") +
       ggplot2::ylab("Latitude") +
-      ggplot2::ggtitle(paste0("Predictor variables for ", scenario," scenario")) +
+      ggplot2::ggtitle(paste0("Predictor variables for ", scenario, " scenario")) +
       ggplot2::theme_minimal() +
       ggspatial::annotation_north_arrow(
         height = ggplot2::unit(1, "cm"),
@@ -248,7 +245,9 @@ plot.predictions <- function(x, spp_name = NULL, scenario = NULL, id = NULL, ...
   ens <- "predictions"
   valid_spp <- names(x$predictions[[1]])
   valid_scen <- names(x$predictions)
-  if (is.null(id)) {id <- 1}
+  if (is.null(id)) {
+    id <- 1
+  }
   if (!is.null(scenario)) {
     scenario <- valid_scen[which.min(stringdist::stringdist(scenario, valid_scen))]
   } else {
@@ -261,12 +260,6 @@ plot.predictions <- function(x, spp_name = NULL, scenario = NULL, id = NULL, ...
   }
 
   grd <- x$predictions[[grep(scenario, names(x$predictions))[1]]][[spp_name]][[1]]
-  #grd <- x$predictions[[scenario]][[spp_name]][[1]]
-  #while (is.null(grd) & !ensemble) {
-  #  valid_scen <- valid_scen[! valid_scen %in% scenario]
-  #  scenario2 <- valid_scen[which.min(stringdist::stringdist(scenario, valid_scen))]
-  #  grd <- x$predictions[[scenario2]][[spp_name]][[1]]
-  #}
 
   cell_id <- x[["predictions"]][[scenario]][[spp_name]][[1]]$cell_id
   v <- x[[ens]][[scenario]][[spp_name]][[id]]$presence
@@ -275,7 +268,7 @@ plot.predictions <- function(x, spp_name = NULL, scenario = NULL, id = NULL, ...
   subtitle <- NULL
 
   p <- ggplot2::ggplot(...)
-  if(!unique(sf::st_geometry_type(grd)) == "LINESTRING"){
+  if (!unique(sf::st_geometry_type(grd)) == "LINESTRING") {
     p <- p + ggplot2::geom_sf(data = grd, ggplot2::aes(fill = result), linewidth = 0.001) +
       ggplot2::scale_fill_viridis_c(name = paste0("Occurrence\n Probability"), limits = c(0, 1))
   } else {
@@ -293,8 +286,7 @@ plot.predictions <- function(x, spp_name = NULL, scenario = NULL, id = NULL, ...
       style = ggspatial::north_arrow_fancy_orienteering,
       pad_x = ggplot2::unit(0.2, "cm"),
       pad_y = ggplot2::unit(0.7, "cm")
-    ) #+
-    #ggspatial::annotation_scale(height = ggplot2::unit(0.2, "cm"), )
+    )
 
   return(p)
 }
@@ -302,12 +294,17 @@ plot.predictions <- function(x, spp_name = NULL, scenario = NULL, id = NULL, ...
 
 #' @rdname plot_occurrences
 #' @export
-plot_ensembles <- function(i, spp_name = NULL, scenario = NULL, id = NULL, ensemble_type = "average", ...) {
+plot_ensembles <- function(i, spp_name = NULL, scenario = NULL, id = NULL, ensemble_type = NULL, ...) {
   assert_class_cli(i, "input_sdm")
-  assert_subset_cli(spp_name, species_names(i))
   assert_names_cli(names(i), must.include = "ensembles")
+  assert_names_cli(names(i), must.include = "predictions")
+  if (!is.null(ensemble_type)) {
+    assert_subset_cli(ensemble_type, i$ensembles$method)
+  } else {
+    ensemble_type <- i$ensembles$method[1]
+  }
+
   x <- i
-  ens <- "ensembles"
   valid_spp <- rownames(x$ensembles$data)
   valid_scen <- colnames(x$ensembles$data)
 
@@ -331,7 +328,7 @@ plot_ensembles <- function(i, spp_name = NULL, scenario = NULL, id = NULL, ensem
   subtitle <- paste0("Ensemble type: ", ensemble_type)
 
   p <- ggplot2::ggplot(...)
-  if(!unique(sf::st_geometry_type(grd)) == "LINESTRING"){
+  if (!unique(sf::st_geometry_type(grd)) == "LINESTRING") {
     p <- p + ggplot2::geom_sf(data = grd, ggplot2::aes(fill = result), linewidth = 0.001) +
       ggplot2::scale_fill_viridis_c(name = paste0("Occurrence\n Probability"), limits = c(0, 1))
   } else {
@@ -349,21 +346,20 @@ plot_ensembles <- function(i, spp_name = NULL, scenario = NULL, id = NULL, ensem
       style = ggspatial::north_arrow_fancy_orienteering,
       pad_x = ggplot2::unit(0.2, "cm"),
       pad_y = ggplot2::unit(0.7, "cm")
-    ) #+
-  #ggspatial::annotation_scale(height = ggplot2::unit(0.2, "cm"), )
+    )
 
   return(p)
-
 }
 
 #' @rdname plot_occurrences
 #' @export
 mapview_grid <- function(i) {
+  .check_suggested("mapview", "mapview_grid")
   assert_subset_cli(class(i), c("sdm_area", "input_sdm"))
 
-  if(is_input_sdm(i)) {
+  if (is_input_sdm(i)) {
     x <- i$predictors
-  } else if(is_sdm_area(i)) {
+  } else if (is_sdm_area(i)) {
     x <- i
   }
 
@@ -375,14 +371,15 @@ mapview_grid <- function(i) {
 #' @rdname plot_occurrences
 #' @export
 mapview_occurrences <- function(i, spp_name = NULL, pa = TRUE) {
+  .check_suggested("mapview", "mapview_occurrences")
   assert_subset_cli(class(i), c("occurrences", "input_sdm"))
   assert_subset_cli(spp_name, species_names(i))
   assert_logical_cli(pa)
   assert_names_cli(names(i), must.include = "occurrences")
 
-  if(is_input_sdm(i)) {
+  if (is_input_sdm(i)) {
     x <- i$occurrences
-  } else if(is_occurrences(i)) {
+  } else if (is_occurrences(i)) {
     x <- i
   }
   valid_spp <- species_names(x)
@@ -401,12 +398,13 @@ mapview_occurrences <- function(i, spp_name = NULL, pa = TRUE) {
 #' @rdname plot_occurrences
 #' @export
 mapview_predictors <- function(i, variables_selected = NULL) {
+  .check_suggested("mapview", "mapview_predictors")
   assert_subset_cli(class(i), c("input_sdm", "sdm_area"))
   assert_subset_cli(variables_selected, c(get_predictor_names(i), "vif", "pca"))
 
-  if(is_input_sdm(i)){
+  if (is_input_sdm(i)) {
     x <- i$predictors
-  } else if(is_sdm_area(i)){
+  } else if (is_sdm_area(i)) {
     x <- i
   }
 
@@ -419,12 +417,13 @@ mapview_predictors <- function(i, variables_selected = NULL) {
   }
 
   st <- x$grid |> dplyr::select(dplyr::all_of(variables_selected))
-  mapview::mapview(st, layer.name=variables_selected)
+  mapview::mapview(st, layer.name = variables_selected)
 }
 
 #' @rdname plot_occurrences
 #' @export
 mapview_scenarios <- function(i, variables_selected = NULL, scenario = NULL) {
+  .check_suggested("mapview", "mapview_scenarios")
   assert_subset_cli(class(i), c("input_sdm", "sdm_area"))
   assert_subset_cli(variables_selected, c(get_predictor_names(i), "vif", "pca"))
   assert_subset_cli(scenario, scenarios_names(i))
@@ -439,24 +438,27 @@ mapview_scenarios <- function(i, variables_selected = NULL, scenario = NULL) {
     variables_selected <- get_predictor_names(x)[1]
   }
 
-  if(is.null(scenario)){
+  if (is.null(scenario)) {
     scenario <- scenarios_names(x)[1]
   }
   st <- x$data[[scenario]] |> dplyr::select(dplyr::all_of(variables_selected))
-  mapview::mapview(st, layer.name = paste0(scenario," ",variables_selected))
+  mapview::mapview(st, layer.name = paste0(scenario, " ", variables_selected))
 }
 
 #' @rdname plot_occurrences
 #' @export
 mapview_predictions <- function(i, spp_name = NULL, scenario = NULL, id = NULL) {
+  .check_suggested("mapview", "mapview_predictions")
   assert_class_cli(i, "input_sdm")
+  assert_names_cli(names(i), must.include = "predictions")
+  assert_subset_cli(id, names(i$predictions$predictions[[1]][[1]]), empty.ok = TRUE)
 
   x <- i$predictions
   valid_spp <- names(x$predictions[[1]])
   valid_scen <- names(x$predictions)
-  ens <- "predictions"
-  grd <- x$grid
-  if (is.null(id)) {id <- 1}
+  if (is.null(id)) {
+    id <- names(i$predictions$predictions[[1]][[1]])[1]
+  }
   if (!is.null(scenario)) {
     scenario <- valid_scen[which.min(stringdist::stringdist(scenario, valid_scen))]
   } else {
@@ -467,22 +469,27 @@ mapview_predictions <- function(i, spp_name = NULL, scenario = NULL, id = NULL) 
   } else {
     spp_name <- valid_spp[1]
   }
-  cell_id <- x[["predictions"]][[scenario]][[spp_name]][[1]]$cell_id
-  v <- x[[ens]][[scenario]][[spp_name]][[id]]$presence
-  grd <- dplyr::filter(grd, grd$cell_id == cell_id)
-  grd[grd$cell_id %in% cell_id, "result"] <- v
-  mapview::mapview(grd, zcol = "result", layer.name = paste0(spp_name))
+  mapview::mapview(x$predictions[[scenario]][[spp_name]][[id]],
+                   zcol = "presence",
+                   layer.name = paste0(spp_name))
 }
 
 #' @rdname plot_occurrences
 #' @export
-mapview_ensembles <- function(i, spp_name = NULL, scenario = NULL, id = NULL, ensemble_type = "average") {
+mapview_ensembles <- function(i, spp_name = NULL, scenario = NULL, id = NULL, ensemble_type = NULL) {
+  .check_suggested("mapview", "mapview_ensembles")
   assert_class_cli(i, "input_sdm")
-  x <- i$predictions
-  valid_spp <- names(x$predictions[[1]])
-  valid_scen <- names(x$predictions)
+  assert_names_cli(names(i), must.include = "ensembles")
+  if (!is.null(ensemble_type)) {
+    assert_subset_cli(ensemble_type, i$ensembles$method)
+  } else {
+    ensemble_type <- i$ensembles$method[1]
+  }
+  x <- i$ensembles
+  valid_spp <- rownames(x$data)
+  valid_scen <- colnames(x$data)
   ens <- "ensembles"
-  grd <- x$grid
+  grd <- i$predictions$grid
   if (!is.null(scenario)) {
     scenario <- valid_scen[which.min(stringdist::stringdist(scenario, valid_scen))]
   } else {
@@ -493,8 +500,8 @@ mapview_ensembles <- function(i, spp_name = NULL, scenario = NULL, id = NULL, en
   } else {
     spp_name <- valid_spp[1]
   }
-  cell_id <- x[["predictions"]][[scenario]][[spp_name]][[1]]$cell_id
-  v <- x[[ens]][[spp_name, scenario]][, ensemble_type]
+  cell_id <- x$data[[spp_name, scenario]]$cell_id
+  v <- x$data[[spp_name, scenario]][,ensemble_type]
   grd <- dplyr::filter(grd, grd$cell_id == cell_id)
   grd[grd$cell_id %in% cell_id, "result"] <- v
   mapview::mapview(grd, zcol = "result", layer.name = paste0(spp_name))
@@ -516,7 +523,6 @@ plot.input_sdm <- function(x, ...) {
   if ("occurrences" %in% names(i)) {
     return(plot_occurrences(i, ...))
   }
-
 }
 
 #' @rdname plot_occurrences
@@ -535,12 +541,14 @@ plot_background <- function(i, variables_selected = NULL, ...) {
     assert_choice_cli(variables_selected, get_predictor_names(i))
   }
 
-  pred_df <- as.data.frame(pred)[,variables_selected]
+  pred_df <- as.data.frame(pred)[, variables_selected]
   colnames(pred_df) <- c("var1", "var2")
-  background <- ggplot2::ggplot(pred_df, ggplot2::aes(x = var1,
-                                                      y = var2,
-                                                      fill = ggplot2::after_stat(density)), ...) +
-    ggplot2::stat_density_2d_filled(bins=50, show.legend = FALSE, contour = FALSE, geom="raster") +
+  background <- ggplot2::ggplot(pred_df, ggplot2::aes(
+    x = var1,
+    y = var2,
+    fill = ggplot2::after_stat(density)
+  ), ...) +
+    ggplot2::stat_density_2d_filled(bins = 50, show.legend = FALSE, contour = FALSE, geom = "raster") +
     ggplot2::scale_fill_viridis_c() +
     ggplot2::ggtitle("Background Data for the Study Area") +
     ggplot2::xlab(variables_selected[1]) +
@@ -554,7 +562,7 @@ plot_background <- function(i, variables_selected = NULL, ...) {
 #' @rdname plot_occurrences
 #' @export
 plot_niche <- function(i, spp_name = NULL, variables_selected = NULL, scenario = NULL, id = NULL,
-                      ensemble_type = "average", raster = FALSE, ...) {
+                       ensemble_type = NULL, raster = FALSE, ...) {
   assert_logical_cli(raster)
   if ("ensembles" %in% names(i)) {
     ens <- "ensembles"
@@ -591,12 +599,17 @@ plot_niche <- function(i, spp_name = NULL, variables_selected = NULL, scenario =
 
   grd <- i$predictions$predictions[[scenario]][[spp_name]][[1]]
   while (is.null(grd)) {
-    valid_scen <- valid_scen[! valid_scen %in% scenario]
+    valid_scen <- valid_scen[!valid_scen %in% scenario]
     scenario2 <- valid_scen[which.min(stringdist::stringdist(scenario, valid_scen))]
     grd <- i$predictions$predictions[[scenario2]][[spp_name]][[1]]
   }
 
   if ("ensembles" %in% names(i)) {
+    if (!is.null(ensemble_type)) {
+      assert_subset_cli(ensemble_type, i$ensembles$method)
+    } else {
+      ensemble_type <- i$ensembles$method[1]
+    }
     cell_id <- i$ensembles$data[[spp_name, scenario]][, "cell_id"]
     v <- i$ensembles$data[[spp_name, scenario]][, ensemble_type]
     grd <- dplyr::filter(grd, grd$cell_id == cell_id)
@@ -609,15 +622,15 @@ plot_niche <- function(i, spp_name = NULL, variables_selected = NULL, scenario =
     grd[grd$cell_id %in% cell_id, "result"] <- v
     subtitle <- NULL
   }
-  grd2 <- as.data.frame(grd)[,c(variables_selected, "result")]
+  grd2 <- as.data.frame(grd)[, c(variables_selected, "result")]
   colnames(grd2) <- c("var1", "var2", "result")
-  # As a raster:
-  if(raster) {
+
+  if (raster) {
     p <- ggplot2::ggplot(...) +
       ggplot2::stat_summary_2d(
         data = grd2,
         ggplot2::aes(x = var1, y = var2, z = result),
-        fun = mean,  # Averages presence probability
+        fun = mean,
         geom = "raster"
       ) +
       ggplot2::scale_fill_viridis_c(name = "Presence Probability") +
@@ -627,11 +640,13 @@ plot_niche <- function(i, spp_name = NULL, variables_selected = NULL, scenario =
       ggplot2::theme_minimal()
   } else {
     p <- ggplot2::ggplot(...) +
-      ggplot2::geom_point(data = grd2,
-                          ggplot2::aes(x = var1, y = var2, color = result),
-                          size = 3,
-                          alpha = 0.4,
-                          stroke = 1) +
+      ggplot2::geom_point(
+        data = grd2,
+        ggplot2::aes(x = var1, y = var2, color = result),
+        size = 3,
+        alpha = 0.4,
+        stroke = 1
+      ) +
       ggplot2::scale_color_viridis_c(name = "Presence Probability") +
       ggplot2::xlab(variables_selected[1]) +
       ggplot2::ylab(variables_selected[2]) +

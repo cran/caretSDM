@@ -16,7 +16,6 @@
 #'
 #' @importFrom ggplot2 ggplot aes xlab ylab ggtitle geom_point scale_color_manual
 #' @importFrom raster extract
-#' @importFrom Rtsne Rtsne
 #' @importFrom dplyr select filter all_of
 #' @importFrom sf st_as_sf
 #'
@@ -24,6 +23,7 @@
 #'
 #' @export
 tsne_sdm <- function(occ, pred = NULL, variables_selected = NULL) {
+  .check_suggested("Rtsne", "tsne_sdm")
   if (is_input_sdm(occ)) {
     y <- occ$occurrences
     pred <- occ$predictors
@@ -58,7 +58,7 @@ tsne_sdm <- function(occ, pred = NULL, variables_selected = NULL) {
 
       ts2 <- dplyr::select(as.data.frame(df_tsne), dplyr::all_of(variables_selected))
       ts2 <- as.matrix(ts2[, variables_selected])
-      tsne_bg <- Rtsne::Rtsne(ts2[!duplicated(ts2),], perplexity = perp)
+      tsne_bg <- Rtsne::Rtsne(ts2[!duplicated(ts2), ], perplexity = perp)
       df <- as.data.frame(tsne_bg$Y)
       tsne_result <- ggplot2::ggplot(df, ggplot2::aes(x = V1, y = V2)) +
         ggplot2::xlab("tSNE Dim 1") +

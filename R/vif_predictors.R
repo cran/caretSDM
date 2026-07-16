@@ -26,7 +26,7 @@
 #' @examples
 
 #' # Create sdm_area object:
-#' sa <- sdm_area(parana, cell_size = 25000, crs = 6933)
+#' sa <- sdm_area(parana, cell_size = 25000, output_crs = 6933)
 #'
 #' # Include predictors:
 #' sa <- add_predictors(sa, bioc) |> select_predictors(c("bio1", "bio4", "bio12"))
@@ -35,7 +35,7 @@
 #' sa <- add_scenarios(sa, scen)
 #'
 #' # Create occurrences:
-#' oc <- occurrences_sdm(occ, crs = 6933)
+#' oc <- occurrences_sdm(occ, occ_crs = 6933)
 #'
 #' # Create input_sdm:
 #' i <- input_sdm(oc, sa)
@@ -48,7 +48,6 @@
 #' vif_summary(i)
 #' selected_variables(i)
 #'
-#' @importFrom usdm vifcor
 #' @importFrom dplyr filter select mutate_if all_of
 #' @importFrom sf st_centroid st_as_sf
 #' @importFrom stars st_extract
@@ -56,6 +55,7 @@
 #'
 #' @export
 vif_predictors <- function(pred, area = "all", th = 0.5, maxobservations = 5000, variables_selected = NULL) {
+  .check_suggested("usdm", "vif_predictors")
   assert_class_cli(pred, "input_sdm")
   assert_subset_cli("predictors", names(pred), empty.ok = FALSE)
   assert_class_cli(pred$predictors, "sdm_area")
@@ -100,7 +100,7 @@ vif_predictors <- function(pred, area = "all", th = 0.5, maxobservations = 5000,
 
 #' @rdname vif_predictors
 #' @export
-vif_summary <- function(i){
+vif_summary <- function(i) {
   assert_class_cli(i, "input_sdm")
   assert_subset_cli("predictors", names(i), empty.ok = FALSE)
   assert_subset_cli("variable_selection", names(i$predictors), empty.ok = FALSE)

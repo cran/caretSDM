@@ -7,6 +7,7 @@
 \alias{get_models}
 \alias{get_validation_metrics}
 \alias{mean_validation_metrics}
+\alias{models_hyperparameters}
 \alias{add_models}
 \title{Train SDM models}
 \usage{
@@ -27,6 +28,8 @@ get_models(i)
 get_validation_metrics(i)
 
 mean_validation_metrics(i)
+
+models_hyperparameters(i)
 
 add_models(m1, m2)
 }
@@ -83,10 +86,13 @@ Deviations (SD) and TSS to each of the algorithms and pseudoabsence datasets use
 
 \code{mean_validation_metrics} return a \code{list} with a \code{tibble} to each species
 summarizing values for ROC, Sensitivity, Specificity and TSS to each of the algorithms used.
+
+\code{models_hyperparameters} returns the hyperparameters that returned the best tuning to each
+model to each species.
 }
 \examples{
 # Create sdm_area object:
-sa <- sdm_area(parana, cell_size = 100000, crs = 6933)
+sa <- sdm_area(parana, cell_size = 100000, output_crs = 6933)
 
 # Include predictors:
 sa <- add_predictors(sa, bioc) |> select_predictors(c("bio1", "bio12"))
@@ -95,7 +101,7 @@ sa <- add_predictors(sa, bioc) |> select_predictors(c("bio1", "bio12"))
 sa <- add_scenarios(sa)
 
 # Create occurrences:
-oc <- occurrences_sdm(occ, crs = 6933) |> join_area(sa)
+oc <- occurrences_sdm(occ, occ_crs = 6933)
 
 # Create input_sdm:
 i <- input_sdm(oc, sa)
@@ -104,17 +110,19 @@ i <- input_sdm(oc, sa)
 i <- pseudoabsences(i, method = "random")
 
 # Custom trainControl:
-ctrl_sdm <- caret::trainControl(method = "repeatedcv",
-                                number = 2,
-                                repeats = 1,
-                                classProbs = TRUE,
-                                returnResamp = "all",
-                                summaryFunction = summary_sdm,
-                                savePredictions = "all")
+ctrl_sdm <- caret::trainControl(
+  method = "repeatedcv",
+  number = 2,
+  repeats = 1,
+  classProbs = TRUE,
+  returnResamp = "all",
+  summaryFunction = summary_sdm,
+  savePredictions = "all"
+)
 
 # Train models:
 i <- train_sdm(i, algo = c("naive_bayes"), ctrl = ctrl_sdm) |>
-suppressWarnings()
+  suppressWarnings()
 
 }
 \seealso{
